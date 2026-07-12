@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NegotiatorIQ | Offer &amp; Price Impact Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#C40000; --red-soft:#FFF2F2; --ink:#130F0F; --muted:#625A5A;
+    --soft:#F7F4F2; --card:#FFFFFF; --line:rgba(19,15,15,0.12); --line-strong:rgba(196,0,0,0.28);
+    --shadow:0 18px 50px rgba(25,15,15,0.08); --shadow-soft:0 10px 28px rgba(25,15,15,0.06);
+    --radius:22px; --radius-sm:12px;
+    --navy:#130F0F; --navy-light:#2A2222; --ink-soft:var(--muted);
+    --accent:var(--red); --accent-dark:#9D0000; --accent-soft:var(--red-soft);
+    --teal:#2F6F6B; --teal-soft:#E4EFEE;
+    --warn:#9D0000; --warn-soft:#FFF2F2;
+    --bg:var(--soft); --border:var(--line);
+    --fb:"Outfit",Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--fb); line-height:1.5;}
+  h1,h2,h3,.display{font-family:var(--fb); font-weight:800; letter-spacing:-.03em;}
+  .num{font-variant-numeric:tabular-nums;}
+  a{color:var(--accent-dark);}
+  .wrap{max-width:1040px; margin:0 auto; padding:0 24px;}
+  /* header */
+  header.brand{background:#fff; border-bottom:1px solid var(--border); padding:18px 0;}
+  .brandbar{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;}
+  .brandbar .logo{display:flex; align-items:center; gap:12px;}
+  .brandbar .logo-mark{width:42px; height:42px; border-radius:11px; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .brandbar .name{font-size:23px; font-weight:800; letter-spacing:-.03em; color:var(--ink);}
+  .brandbar .name b{color:var(--red); font-weight:900;}
+  .brandbar .name .realty{color:var(--muted); font-weight:500;}
+  .brandbar .tagline{font-size:11px; color:var(--muted); font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin-top:1px;}
+  .header-actions{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .nav-link-btn{display:inline-flex; align-items:center; gap:7px; background:transparent; border:none; color:var(--ink); font-size:13.5px; font-weight:700; padding:8px 4px; white-space:nowrap;}
+  .nav-link-btn svg{width:17px; height:17px; color:var(--accent-dark); flex-shrink:0;}
+  .nav-link-btn:hover{color:var(--accent-dark);}
+  .contact-pill{display:inline-flex; align-items:center; background:var(--navy); color:#fff; border-radius:999px; padding:12px 22px; font-size:14px; font-weight:700; text-decoration:none; white-space:nowrap; border:none; cursor:pointer;}
+  .contact-pill:hover{background:var(--navy-light);}
+  .header-contact-menu{position:relative;}
+  .contact-dropdown{position:absolute; top:calc(100% + 8px); right:0; background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow); padding:8px; min-width:250px; display:none; flex-direction:column; gap:2px; z-index:200;}
+  .contact-dropdown.is-open{display:flex;}
+  .contact-option{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:8px; color:var(--ink); text-decoration:none; font-size:13.5px; font-weight:600;}
+  .contact-option:hover{background:var(--soft);}
+  .contact-option .ext-arrow{color:var(--accent-dark); font-size:14px;}
+  /* hero */
+  .hero-outer{margin-top:32px; background:#fff; border-radius:28px; box-shadow:var(--shadow); padding:clamp(20px,3vw,40px);}
+  .hero-grid{display:grid; grid-template-columns:1.2fr 1fr; gap:36px; align-items:start;}
+  @media(max-width:860px){.hero-grid{grid-template-columns:1fr;}}
+  .tool-label{font-size:clamp(22px,2.6vw,30px); font-weight:900; letter-spacing:-.01em; text-transform:uppercase; color:var(--ink); line-height:1;}
+  .tool-label b{color:var(--red);}
+  .tool-sub{font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:6px;}
+  .hero h1{font-size:clamp(30px,4.2vw,48px); font-weight:900; letter-spacing:-.035em; line-height:1.05; margin:18px 0 16px; color:var(--ink);}
+  .hero h1 em{font-style:normal; color:var(--red);}
+  .hero p{font-size:16px; color:var(--muted); max-width:520px; margin:0 0 22px; line-height:1.6;}
+  .hero-ctas{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:14px;}
+  .hero-ctas .btn-primary,.hero-ctas .btn-ghost{padding:14px 22px;}
+  .hero-note{font-size:12.5px; color:var(--muted);}
+  .tool-panel{border:1px solid var(--border); border-top:4px solid var(--red); border-radius:20px; padding:22px 24px 24px; box-shadow:var(--shadow-soft); background:#fff;}
+  .tool-badge{display:inline-flex; align-items:center; padding:6px 13px; border:1px solid var(--line-strong); border-radius:999px; background:var(--red-soft); color:var(--accent-dark); font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; margin-bottom:14px;}
+  .tool-panel h2{font-size:24px; font-weight:800; letter-spacing:-.02em; margin:0 0 10px; color:var(--ink);}
+  .tool-panel p{font-size:14px; color:var(--muted); line-height:1.55; margin:0 0 18px;}
+  .quick-row{display:flex; gap:10px; align-items:flex-end;}
+  .quick-field{flex:1;}
+  .quick-field label{font-size:11.5px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px;}
+  .icon-row{display:flex; flex-wrap:wrap; gap:14px 18px; margin-top:18px;}
+  .icon-row span{display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; color:var(--ink);}
+  .icon-row svg{width:16px; height:16px; color:var(--red); flex-shrink:0;}
+  /* steps */
+  .stepbar{display:flex; gap:6px; margin:32px 0 26px;}
+  .stepbar .seg{flex:1; height:4px; border-radius:2px; background:var(--border);}
+  .stepbar .seg.done{background:var(--accent);}
+  .steplabels{display:flex; justify-content:space-between; font-size:12px; color:var(--ink-soft); margin-top:8px; margin-bottom:28px;}
+  .steplabels span.active{color:var(--navy); font-weight:600;}
+  .persona-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media(max-width:640px){.persona-grid{grid-template-columns:1fr;}}
+  .persona-card{text-align:left; background:#fff; border:1px solid var(--border); border-radius:var(--radius-sm); padding:22px 22px 24px; cursor:pointer; box-shadow:var(--shadow-soft); transition:.15s;}
+  .persona-card:hover{border-color:var(--line-strong); transform:translateY(-2px);}
+  .persona-card .picon{width:40px; height:40px; border-radius:10px; background:var(--red-soft); display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  .persona-card .picon svg{width:20px; height:20px; color:var(--accent-dark);}
+  .persona-card h3{font-size:17px; font-weight:800; margin:0 0 6px; color:var(--ink);}
+  .persona-card p{font-size:13px; color:var(--muted); margin:0; line-height:1.5;}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:26px 28px; margin-bottom:22px; box-shadow:var(--shadow-soft);}
+  .deal-card{position:relative; border:1px solid var(--border); border-radius:var(--radius); padding:24px 28px; margin-bottom:18px; background:#fff; box-shadow:var(--shadow-soft);}
+  .add-deal-callout{display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap; border:1.5px dashed var(--line-strong); background:var(--red-soft); border-radius:var(--radius-sm); padding:16px 20px; margin-bottom:22px;}
+  .email-callout{border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); padding:18px 20px; margin-bottom:18px; box-shadow:var(--shadow-soft);}
+  .email-callout-row{display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap;}
+  .email-callout-row .field{min-width:180px;}
+  .email-callout-row button{flex-shrink:0;}
+  .email-status{margin-top:10px; font-size:13px; display:none; align-items:center; gap:8px; padding:10px 14px; border-radius:8px; font-weight:600;}
+  .email-status.show{display:flex;}
+  .email-status.pending{background:var(--soft); color:var(--muted); font-weight:500;}
+  .email-status.success{background:var(--teal-soft); color:var(--teal); border:1px solid rgba(47,111,107,0.25);}
+  .email-status.error{background:var(--red-soft); color:var(--accent-dark); border:1px solid var(--line-strong);}
+  .add-deal-callout-text{display:flex; flex-direction:column; gap:2px; font-size:13px; color:var(--accent-dark); max-width:520px;}
+  .add-deal-callout-text b{font-size:14px; color:var(--ink);}
+  .add-deal-callout .btn-ghost{background:#fff; flex-shrink:0;}
+  .deal-card h4{font-size:14px; font-weight:800; letter-spacing:.02em; text-transform:uppercase; color:var(--accent-dark); margin:0 0 16px;}
+  .deal-remove{position:absolute; top:20px; right:24px; background:transparent; border:1px solid var(--border); border-radius:999px; width:28px; height:28px; padding:0; font-size:14px; color:var(--muted); line-height:1; display:flex; align-items:center; justify-content:center;}
+  .deal-remove:hover{border-color:var(--line-strong); color:var(--accent-dark);}
+  .card h2{font-size:20px; font-weight:600; color:var(--navy); margin:0 0 4px;}
+  .card .sub{font-size:13px; color:var(--ink-soft); margin:0 0 20px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px 20px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px 20px;}
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr;} .hero h1{font-size:28px;}}
+  label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
+  .field{margin-bottom:4px;}
+  .field .hint{font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+  input[type=text],input[type=number],input[type=email]{width:100%; padding:9px 11px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:inherit; color:var(--ink); background:#fff;}
+  input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  input:disabled{background:#F1EFE9; color:var(--ink-soft);}
+  .prefix-wrap{position:relative;}
+  .prefix-wrap span{position:absolute; left:11px; top:9px; font-size:14px; color:var(--ink-soft);}
+  .prefix-wrap input{padding-left:24px;}
+  .suffix-wrap span{position:absolute; right:11px; top:9px; font-size:14px; color:var(--ink-soft);}
+  .suffix-wrap input{padding-right:28px;}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-top:1px solid var(--border);}
+  .toggle-row:first-of-type{border-top:none;}
+  .toggle-row .lbl{font-size:14px; font-weight:600; color:var(--navy);}
+  .toggle-row .desc{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+  .switch{position:relative; width:42px; height:24px; flex-shrink:0;}
+  .switch input{opacity:0; width:0; height:0;}
+  .slider-sw{position:absolute; inset:0; background:#D6D0C2; border-radius:24px; cursor:pointer; transition:.15s;}
+  .slider-sw:before{content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.15s;}
+  input:checked + .slider-sw{background:var(--accent);}
+  input:checked + .slider-sw:before{transform:translateX(18px);}
+  .lever-block{background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-top:14px;}
+  .lever-block .grid3{margin-top:12px;}
+  .radio-pill{display:flex; gap:8px; margin-top:6px;}
+  .radio-pill label{display:flex; align-items:center; gap:6px; font-weight:400; font-size:13px; color:var(--ink); background:#fff; border:1px solid var(--border); padding:6px 12px; border-radius:20px; cursor:pointer; margin:0;}
+  .radio-pill input{width:auto; margin:0;}
+  .navrow{display:flex; justify-content:space-between; margin-top:6px;}
+  button{font-family:inherit; font-size:14px; cursor:pointer; border-radius:8px; padding:11px 22px; font-weight:600; border:none;}
+  .btn-primary{background:var(--red); color:#fff;}
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn-ghost{background:transparent; color:var(--ink); border:1px solid var(--border);}
+  .btn-ghost:hover{background:#fff; border-color:var(--line-strong);}
+  .btn-small{padding:7px 14px; font-size:12.5px;}
+  /* results */
+  .scen-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  @media(max-width:800px){.scen-grid{grid-template-columns:1fr;}}
+  .scen-card{border:1px solid var(--border); border-radius:var(--radius-sm); padding:18px 18px 20px; background:#fff; position:relative; box-shadow:var(--shadow-soft);}
+  .scen-card.best{border:2px solid var(--teal);}
+  .scen-card .badge{position:absolute; top:-11px; left:16px; background:var(--teal); color:#fff; font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px;}
+  .scen-card h3{font-size:15px; margin:6px 0 14px; color:var(--navy);}
+  .sublabel{font-size:10.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:14px 0 2px;}
+  .sublabel:first-of-type{margin-top:2px;}
+  .row{display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid #F0EEE7;}
+  .row .v{font-weight:600; color:var(--ink);}
+  .pct-inline{color:var(--muted); font-weight:600; font-size:12px; margin-right:8px;}
+  .row.total{border-bottom:none; margin-top:6px; padding-top:10px; border-top:1px solid var(--border);}
+  .row.total span:first-child{font-weight:700; color:var(--ink);}
+  .row.total .v{color:var(--navy); font-size:15px;}
+  .scen-card .use-btn{width:100%; margin-top:16px; background:transparent; border:1.5px solid var(--red); color:var(--accent-dark);}
+  .scen-card .use-btn:hover{background:var(--red-soft);}
+  .verdict{background:var(--teal-soft); border-radius:10px; padding:18px 20px; margin-top:18px; font-size:14px; color:var(--navy);}
+  .verdict b{color:var(--teal);}
+  .net-table{width:100%; border-collapse:collapse; font-size:13.5px; table-layout:fixed;}
+  .net-table th{text-align:right; font-size:12px; font-weight:800; color:var(--ink); padding:0 0 10px; border-bottom:1px solid var(--border);}
+  .net-table th:first-child,.net-table td:first-child{text-align:left; color:var(--muted); font-weight:500;}
+  .net-table td{text-align:right; padding:9px 0; border-bottom:1px solid #F0EEE7; font-variant-numeric:tabular-nums;}
+  .net-table tr.total td{border-bottom:none; border-top:1px solid var(--border); padding-top:12px; font-weight:800; color:var(--ink); font-size:14.5px;}
+  .net-table td.neg{color:var(--accent-dark);}
+  canvas{width:100%; max-height:220px;}
+  .legend{display:flex; gap:16px; font-size:12px; color:var(--ink-soft); margin-top:8px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend i{width:10px; height:10px; border-radius:3px; display:inline-block;}
+  .clientbar{display:flex; align-items:center; justify-content:space-between; background:var(--navy); color:#fff; border-radius:10px; padding:12px 18px; margin-bottom:18px; font-size:13px;}
+  .clientbar .desc{color:#C9D4DE; font-size:12px; margin-top:2px;}
+  .notes-box{border:1px dashed var(--accent); background:var(--accent-soft); border-radius:10px; padding:14px 16px; margin-top:18px; font-size:13px; color:var(--accent-dark);}
+  .insight-list{display:flex; flex-direction:column; gap:10px; margin-top:14px;}
+  .insight-item{display:flex; gap:12px; align-items:flex-start; border:1px solid var(--border); border-radius:var(--radius-sm); padding:13px 16px; background:#fff;}
+  .insight-item.importance-high{border-left:3px solid var(--red);}
+  .insight-item.importance-medium{border-left:3px solid var(--teal);}
+  .insight-item .ipill{flex-shrink:0; font-size:9.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); background:var(--soft); border:1px solid var(--border); border-radius:999px; padding:4px 9px; margin-top:1px;}
+  .insight-item .itext b{display:block; font-size:13.5px; color:var(--ink); margin-bottom:2px;}
+  .insight-item .itext span{font-size:13px; color:var(--muted); line-height:1.5;}
+  .questions-box{margin-top:16px; font-size:13px; color:var(--muted);}
+  .questions-box b{display:block; color:var(--ink); font-size:12.5px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;}
+  .questions-box ul{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:5px;}
+  .analysis-table{width:100%; border-collapse:collapse; font-size:13px; margin-top:6px;}
+  .analysis-table th{text-align:right; font-size:11.5px; font-weight:800; color:var(--ink); padding:0 0 8px; border-bottom:1px solid var(--border);}
+  .analysis-table th:first-child,.analysis-table td:first-child{text-align:left; color:var(--muted); font-weight:500;}
+  .analysis-table td{text-align:right; padding:8px 0; border-bottom:1px solid #F0EEE7; font-variant-numeric:tabular-nums;}
+  .notes-box b{display:block; margin-bottom:4px; color:var(--navy);}
+  .site-footer{margin-top:44px; padding:0 0 40px;}
+  .ft-unified-card{display:grid; grid-template-columns:minmax(0,1.35fr) minmax(280px,.95fr); gap:28px; align-items:stretch; background:#050607; color:#F7F2F2; border-radius:26px; padding:26px 28px; box-shadow:var(--shadow);}
+  @media(max-width:700px){.ft-unified-card{grid-template-columns:1fr;}}
+  .ft-primary{display:flex; flex-direction:column; justify-content:center;}
+  .ft-brandmark{display:inline-flex; align-items:center; gap:12px; width:max-content;}
+  .ft-brandmark .logo-mark{width:38px; height:38px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:15px;}
+  .ft-brandmark span{font-size:19px; font-weight:800; letter-spacing:-.03em; color:#fff;}
+  .ft-brandmark span b{color:var(--red); font-weight:900;}
+  .ft-copy{max-width:36ch; margin-top:14px; color:rgba(255,255,255,.67); font-size:14.5px; line-height:1.6;}
+  .ft-contact-card{display:flex; flex-direction:column; justify-content:center; padding-left:24px; border-left:1px solid rgba(255,255,255,.10);}
+  @media(max-width:700px){.ft-contact-card{padding-left:0; border-left:0; border-top:1px solid rgba(255,255,255,.10); padding-top:18px;}}
+  .ft-label{margin:0; color:#fff; font-size:15px; font-weight:800; letter-spacing:.02em; text-transform:uppercase;}
+  .ft-sub{margin-top:6px; color:rgba(255,255,255,.62); font-size:13px;}
+  .ft-phone{margin-top:10px; color:#fff; font-size:16px; font-weight:800;}
+  .ft-actions{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:14px;}
+  .ft-link{display:inline-flex; align-items:center; justify-content:center; min-width:120px; min-height:40px; padding:9px 16px; border-radius:999px; border:1px solid rgba(255,255,255,.18); color:#fff; text-decoration:none; font-size:13px; font-weight:700;}
+  .ft-link:hover{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.28);}
+  .ft-bottom{display:flex; flex-wrap:wrap; justify-content:space-between; gap:14px; margin-top:20px; font-size:11.5px; color:var(--ink-soft);}
+  .ft-disclaimer{max-width:760px;}
+  .howto{margin-top:20px; background:#050607; color:#fff; border-radius:24px; padding:26px 26px 28px;}
+  .howto h3{font-size:16px; font-weight:800; letter-spacing:-.02em; margin:0 0 16px;}
+  .howto ol{list-style:none; margin:0; padding:0; display:grid; gap:14px;}
+  .howto li{display:grid; grid-template-columns:32px 1fr; gap:14px; align-items:start; font-size:13.5px; line-height:1.5; color:rgba(255,255,255,.78);}
+  .howto li b{display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:var(--red); color:#fff; font-size:13px; font-weight:800;}
+  .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);}  .amort-overlay{position:fixed; inset:0; background:rgba(19,15,15,0.55); display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000;}
+  .amort-modal{background:#fff; border-radius:var(--radius); box-shadow:var(--shadow); padding:28px 30px; width:100%; max-width:560px; max-height:88vh; overflow-y:auto;}
+  .amort-modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;}
+  .amort-modal-head h3{font-size:19px; font-weight:800; margin:0; color:var(--ink);}
+  .amort-close{background:transparent; border:none; font-size:22px; line-height:1; color:var(--muted); padding:2px 6px;}
+  .amort-close:hover{color:var(--accent-dark);}
+  .amort-row{display:flex; align-items:center; justify-content:space-between; border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 16px; margin-top:10px; cursor:pointer; background:#fff; transition:.12s;}
+  .amort-row:hover{border-color:var(--line-strong); background:var(--red-soft);}
+  .amort-row .lbl{font-size:12.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
+  .amort-row .bal{font-size:17px; font-weight:800; color:var(--ink);}
+  .amort-row .hint{font-size:11px; color:var(--accent-dark); font-weight:600;}
+  .amort-row.current{border-color:var(--line-strong); background:var(--red-soft);}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+<header class="brand">
+  <div class="wrap brandbar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 11.5 12 4l8 7.5" stroke="#130F0F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 10.5V19a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8.5" stroke="#130F0F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="10" y="13.5" width="4" height="6.5" rx="1" fill="#C40000"/>
+        </svg>
+      </div>
+      <div>
+        <div class="name">Smart<b>IQ</b> <span class="realty">Realty</span></div>
+        <div class="tagline">Smarter moves start here</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="nav-link-btn" onclick="openAmortModal()" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01"/></svg>
+        Amortization Calculator
+      </button>
+      <div class="header-contact-menu">
+        <button class="contact-pill" data-contact-toggle onclick="toggleContactMenu()" type="button" aria-haspopup="true" aria-expanded="false">Contact Kelvin</button>
+        <div class="contact-dropdown" data-contact-options>
+          <a href="tel:+13178338419" class="contact-option">
+            <span>Call/Text 317.833.8419</span><span class="ext-arrow">&#8599;</span>
+          </a>
+          <a href="mailto:khart@fathomrealty.com" class="contact-option" onclick="copyEmailFallback(event)">
+            <span>Email khart@fathomrealty.com</span><span class="ext-arrow">&#8599;</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div id="amortOverlay" class="amort-overlay" style="display:none;" onclick="if(event.target===this) closeAmortModal();">
+  <div class="amort-modal" role="dialog" aria-label="Amortization calculator">
+    <div class="amort-modal-head">
+      <h3>Amortization calculator</h3>
+      <button class="amort-close" onclick="closeAmortModal()" type="button" aria-label="Close">&times;</button>
+    </div>
+    <p class="sub" style="margin-top:-6px;">Estimate a loan's remaining balance today, and over the next 3 months &mdash; handy for pulling a payoff estimate.</p>
+
+    <div class="grid2">
+      <div class="field"><label>Starting loan amount</label><div class="prefix-wrap"><span>$</span><input type="number" id="amortPrincipal" value="200000" oninput="calcAmortization()"></div></div>
+      <div class="field"><label>Interest rate</label><div class="suffix-wrap"><input type="number" id="amortRate" value="6.5" step="0.125" oninput="calcAmortization()"><span>%</span></div></div>
+      <div class="field"><label>Loan term</label><div class="suffix-wrap"><input type="number" id="amortTerm" value="30" oninput="calcAmortization()"><span>yrs</span></div></div>
+      <div class="field"><label>Loan started</label>
+        <div style="display:flex; gap:8px;">
+          <select id="amortStartMonth" onchange="calcAmortization()" style="flex:1.4;"></select>
+          <input type="number" id="amortStartYear" value="2023" oninput="calcAmortization()" style="flex:1;">
+        </div>
+      </div>
+    </div>
+
+    <div id="amortResults"></div>
+  </div>
+</div>
+
+
+<div class="wrap">
+
+  <section class="hero-outer">
+    <div class="hero-grid">
+      <div class="hero">
+        <div class="tool-label">NEGOTIATOR<b>IQ</b></div>
+        <div class="tool-sub">Know your position</div>
+        <h1>See exactly where you <em>stand</em> on this deal.</h1>
+        <p>Whether you're guiding a buyer or a seller, see exactly what an offer or price actually means financially &mdash; monthly payment, cash needed, or net proceeds &mdash; before emotions enter the negotiation.</p>
+        <p class="hero-note">Comparing this against a straight price cut? The side-by-side view at the end puts both on the same page.</p>
+      </div>
+
+      <div class="tool-panel">
+        <div class="tool-badge">Complimentary tool</div>
+        <h2>See the full financial picture.</h2>
+        <p>Enter the offer on the table to see its full financial impact &mdash; for the buyer's payment and the seller's proceeds &mdash; before anyone negotiates a single term.</p>
+        <div class="navrow" style="margin-top:4px;"><span></span><button class="btn-primary" onclick="quickStart()">Get Started &rarr;</button></div>
+        <div class="icon-row">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M4 12l4-4M4 12l4 4"/></svg>Pricing</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/></svg>Financing</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18v12H3zM3 7l4-4h10l4 4M16 13h2"/></svg>Cash to close</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Monthly payment</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 6.5c0-1.5-1.8-2.5-5-2.5s-5 1.2-5 3 2 2.5 5 2.8c3 .3 5 1.3 5 3S14.2 15.5 12 15.5s-5-1-5-2.5"/></svg>Net proceeds</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="howto" id="howtoSection" aria-label="How the tool works">
+      <h3>How it works</h3>
+      <ol>
+        <li><b>1</b><span>Enter the offer and deal terms on the table.</span></li>
+        <li><b>2</b><span>Compare the financing options that apply to this offer.</span></li>
+        <li><b>3</b><span>See the full impact &mdash; cash needed, monthly payment, or net proceeds &mdash; then share the summary.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <div id="stepbarWrap">
+    <div class="stepbar" id="stepbar"></div>
+    <div class="steplabels" id="steplabels"></div>
+  </div>
+
+  <!-- STEP: CLIENT TYPE -->
+  <div class="step" id="step-type">
+    <div class="card">
+      <h2>Who's this consultation for?</h2>
+      <p class="sub">This shapes what shows up next &mdash; a seller doesn't need the buyer's loan-program detail, and vice versa.</p>
+      <div class="persona-grid">
+        <button class="persona-card" onclick="selectClientType('buyer')" type="button">
+          <div class="picon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+          <h3>Buyer</h3>
+          <p>Walk through financing options, monthly payment, and cash to close.</p>
+        </button>
+        <button class="persona-card" onclick="selectClientType('seller')" type="button">
+          <div class="picon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 9.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5"/></svg></div>
+          <h3>Seller</h3>
+          <p>Focus on net proceeds &mdash; what this offer, and any negotiated terms, actually nets.</p>
+        </button>
+      </div>
+      <div class="navrow" style="margin-top:20px;"><button class="btn-ghost" onclick="back()">&larr; Back to deal terms</button><span></span></div>
+    </div>
+  </div>
+
+  <!-- STEP: DEAL TERMS -->
+  <div class="step" id="step-deal" style="display:none;">
+    <div class="card">
+      <h2 id="dealH2">Deal terms</h2>
+      <p class="sub" id="dealSub">The offer on the table, and the costs that shape its impact for buyer and seller alike.</p>
+      <div class="grid2">
+        <div class="field"><label>Proposed price/Offer price</label><div class="prefix-wrap"><span>$</span><input type="number" id="offer" value="0" oninput="updateClosingCostAuto(); updateOfferDependentFields();"></div></div>
+        <div class="field"><label>Seller's mortgage payoff</label><div class="prefix-wrap"><span>$</span><input type="number" id="payoff" value="0"></div></div>
+        <div class="field"><label>Broker Compensation</label><div class="suffix-wrap"><input type="number" id="commission" value="6" step="0.1"><span>%</span></div>
+          <div class="radio-pill" style="margin-top:8px;">
+            <label><input type="radio" name="commissionSplit" value="seller" checked> Charge to Seller</label>
+            <label><input type="radio" name="commissionSplit" value="split"> Split Charge Seller/Buyer</label>
+          </div>
+        </div>
+        <div class="field"><label>Transaction closing costs</label><div class="prefix-wrap"><span>$</span><input type="number" id="sellerClosing" value="0" disabled></div>
+          <div class="hint">Auto-estimated at 1.3% of purchase price (Indiana average), applied to both sides.</div></div>
+        <div class="field"><label>Seller credit / concession to buyer</label><div class="prefix-wrap"><span>$</span><input type="number" id="sellerCreditBase" value="0"></div>
+          <div class="hint">Applies to every financing option before any additional cost is added.</div></div>
+        <div class="field"><label>Monthly HOA (optional)</label><div class="prefix-wrap"><span>$</span><input type="number" id="hoa" value="0"></div></div>
+      </div>
+    </div>
+
+    <div id="extraDeals"></div>
+
+    <div id="addDealRow" class="add-deal-callout" style="display:none;">
+      <div class="add-deal-callout-text">
+        <b>Comparing multiple offers?</b>
+        <span>Add up to 3 more below to see them side by side &mdash; otherwise, continue to see results for the offer above.</span>
+      </div>
+      <button class="btn-ghost" onclick="addDeal()" type="button">+ Add another offer</button>
+    </div>
+
+    <div class="navrow">
+      <button class="btn-ghost" id="dealBackBtn" onclick="back()" style="display:none;">&larr; Back</button>
+      <button class="btn-primary" id="dealContinueBtn" onclick="next()">Continue &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP: BUYER FINANCING -->
+  <div class="step" id="step-financing" style="display:none;">
+    <div class="card">
+      <h2>Buyer financing</h2>
+      <p class="sub">Your baseline loan assumptions &mdash; the starting point before comparing financing options.</p>
+      <div class="grid3">
+        <div class="field"><label>Down payment</label><div class="suffix-wrap"><input type="number" id="downPct" value="3" step="0.5" oninput="updatePmiRateAuto()"><span>%</span></div></div>
+        <div class="field"><label>Market interest rate</label><div class="suffix-wrap"><input type="number" id="marketRate" value="6.5" step="0.125" oninput="updateBuydownRateDisplays()"><span>%</span></div></div>
+        <div class="field"><label>Loan term</label><div class="suffix-wrap"><input type="number" id="termYears" value="30"><span>yrs</span></div></div>
+        <div class="field"><label>Annual property taxes</label><div class="prefix-wrap"><span>$</span><input type="number" id="taxesAnnual" value="0" disabled></div>
+          <div class="hint">Auto-estimated at 0.85% of purchase price.</div></div>
+        <div class="field"><label>Annual homeowner's insurance</label><div class="prefix-wrap"><span>$</span><input type="number" id="insAnnual" value="0" disabled></div>
+          <div class="hint">Auto-estimated at 0.24% of purchase price.</div></div>
+        <div class="field"><label>PMI rate (annual, on balance)</label><div class="suffix-wrap"><input type="number" id="pmiRate" value="0.94" step="0.01" disabled><span>%</span></div>
+          <div class="hint">Auto-estimated from down payment tier.</div></div>
+        <div class="field"><label>PMI drops off at</label><div class="suffix-wrap"><input type="number" id="pmiDrop" value="80"><span>% LTV</span></div></div>
+        <div class="field"><label>Transaction closing costs</label><div class="prefix-wrap"><span>$</span><input type="number" id="buyerClosingDisplay" disabled></div>
+          <div class="hint">Carried over from Deal terms (1.3% of price).</div></div>
+        <div class="field"><label>Earnest money already provided</label><div class="prefix-wrap"><span>$</span><input type="number" id="earnest" value="0"></div></div>
+      </div>
+      <div class="navrow"><button class="btn-ghost" onclick="back()">&larr; Back</button><button class="btn-primary" onclick="next()">Continue &rarr;</button></div>
+    </div>
+  </div>
+
+  <!-- STEP: FINANCING SCENARIOS -->
+  <div class="step" id="step-scenarios" style="display:none;">
+    <div class="card">
+      <h2>Financing options</h2>
+      <p class="sub">See how different financing structures change this offer's monthly payment and cash needed. Turn any of them on or off to compare.</p>
+
+      <div class="toggle-row">
+        <div><div class="lbl">Standard Fixed Mortgage</div><div class="desc">Conventional or FHA-style fixed loan at market rate &mdash; no buydown, no points.</div></div>
+        <label class="switch"><input type="checkbox" id="enBasic" checked onchange="render()"><span class="slider-sw"></span></label>
+      </div>
+      <div class="lever-block" id="blockBasic">
+        <div class="grid3">
+          <div class="field"><label>Interest rate</label><div class="suffix-wrap"><input type="number" id="basicRateDisplay" disabled><span>%</span></div>
+            <div class="hint">Carried over from Buyer financing.</div></div>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div><div class="lbl">VA</div><div class="desc">0% down for a qualified veteran or service member &mdash; no PMI.</div></div>
+        <label class="switch"><input type="checkbox" id="enVA" onchange="render()"><span class="slider-sw"></span></label>
+      </div>
+      <div class="lever-block" id="blockVA">
+        <div class="grid3">
+          <div class="field"><label>Down payment</label><div class="suffix-wrap"><input type="number" value="0" disabled><span>%</span></div>
+            <div class="hint">VA loans allow 0% down for qualified borrowers.</div></div>
+          <div class="field"><label>Interest rate</label><div class="suffix-wrap"><input type="number" id="vaRateDisplay" disabled><span>%</span></div>
+            <div class="hint">Carried over from Buyer financing.</div></div>
+        </div>
+        <div class="hint" style="margin-top:10px;">No PMI required on VA loans, regardless of the down payment field on Buyer Financing. Funding fee isn't modeled here &mdash; treat this as a payment/cash-to-close estimate, not a full VA cost breakdown.</div>
+      </div>
+
+      <div class="toggle-row">
+        <div><div class="lbl">2/1 temporary buydown</div><div class="desc">Rate steps up over 2 years, then settles at market.</div></div>
+        <label class="switch"><input type="checkbox" id="en21" checked onchange="render()"><span class="slider-sw"></span></label>
+      </div>
+      <div class="lever-block" id="block21">
+        <div class="grid3">
+          <div class="field"><label>Year 1 rate</label><div class="suffix-wrap"><input type="number" id="r1_21" disabled><span>%</span></div></div>
+          <div class="field"><label>Year 2 rate</label><div class="suffix-wrap"><input type="number" id="r2_21" disabled><span>%</span></div></div>
+          <div class="field"><label>Settled rate</label><div class="suffix-wrap"><input type="number" id="settled_21" disabled><span>%</span></div></div>
+        </div>
+        <div class="hint" style="margin-top:10px;">Program-defined 2/1 structure, carried over from the market rate.</div>
+      </div>
+
+      <div class="toggle-row">
+        <div><div class="lbl">3/1 temporary buydown</div><div class="desc">Rate steps up over 3 years, then settles at market.</div></div>
+        <label class="switch"><input type="checkbox" id="en31" checked onchange="render()"><span class="slider-sw"></span></label>
+      </div>
+      <div class="lever-block" id="block31">
+        <div class="grid3">
+          <div class="field"><label>Year 1 rate</label><div class="suffix-wrap"><input type="number" id="r1" disabled><span>%</span></div></div>
+          <div class="field"><label>Year 2 rate</label><div class="suffix-wrap"><input type="number" id="r2" disabled><span>%</span></div></div>
+          <div class="field"><label>Year 3 rate</label><div class="suffix-wrap"><input type="number" id="r3" disabled><span>%</span></div></div>
+        </div>
+        <div class="field" style="margin-top:12px; max-width:180px;"><label>Settled rate</label><div class="suffix-wrap"><input type="number" id="settled_31" disabled><span>%</span></div></div>
+        <div class="hint" style="margin-top:10px;">Program-defined 3/1 structure, carried over from the market rate.</div>
+      </div>
+
+      <div class="toggle-row">
+        <div><div class="lbl">Fixed (permanent) buydown</div><div class="desc">Points paid upfront for a lower rate for the life of the loan.</div></div>
+        <label class="switch"><input type="checkbox" id="enFix" checked onchange="render()"><span class="slider-sw"></span></label>
+      </div>
+      <div class="lever-block" id="blockFix">
+        <div class="grid3">
+          <div class="field"><label>Reduced fixed rate</label><div class="suffix-wrap"><input type="number" id="fixRate" value="5" step="0.125" oninput="updateFixedBuydownCost()"></div></div>
+          <div class="field"><label>Estimated points cost</label><div class="prefix-wrap"><span>$</span><input type="number" id="fixCost" value="16005" disabled></div>
+            <div class="hint">Auto-calculated at 1pt per 0.25% below market.</div></div>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div><div class="lbl">Cash purchase</div><div class="desc">Full price paid at closing &mdash; no loan, no PMI, no monthly principal &amp; interest.</div></div>
+        <label class="switch"><input type="checkbox" id="enCash" onchange="render()"><span class="slider-sw"></span></label>
+      </div>
+
+      <div class="navrow"><button class="btn-ghost" onclick="back()">&larr; Back</button><button class="btn-primary" onclick="next()">Compare &rarr;</button></div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step" id="step-compare" style="display:none;">
+    <div class="clientbar">
+      <div><div>Client view</div><div class="desc">Hide agent notes and lock deal terms before sharing.</div></div>
+      <label class="switch"><input type="checkbox" id="clientView" onchange="render()"><span class="slider-sw"></span></label>
+    </div>
+
+    <div id="buyerView">
+      <div class="card">
+        <h2>Side by side</h2>
+        <p class="sub">Cash needed now vs. monthly payment over time, for each option on the table.</p>
+        <div class="scen-grid" id="scenGrid"></div>
+
+        <div style="margin-top:26px;">
+          <h3 style="font-size:14px; color:var(--navy); margin-bottom:6px;">Monthly payment, first 5 years</h3>
+          <canvas id="chart" height="220"></canvas>
+          <div class="legend" id="chartLegend"></div>
+        </div>
+
+        <div class="verdict" id="verdict"></div>
+      </div>
+
+      <div class="card">
+        <h2>NegotiatorIQ Analysis</h2>
+        <p class="sub">Objective facts calculated directly from the numbers above &mdash; no AI, no guesswork.</p>
+        <div id="analysisInsights"></div>
+        <div id="analysisQuestions"></div>
+        <button class="btn-ghost" id="analysisToggleBtn" onclick="toggleAnalysisDetail()" type="button">See full analysis &darr;</button>
+        <div id="analysisDetail" style="display:none; margin-top:18px;"></div>
+      </div>
+    </div>
+
+    <div id="sellerView">
+      <div class="card">
+        <h2 id="sellerNetH2">Seller's net proceeds</h2>
+        <p class="sub" id="sellerNetSub">What the seller walks away with under each option on the table, line by line.</p>
+        <div style="overflow-x:auto;"><table class="net-table" id="netTable"></table></div>
+      </div>
+
+      <div class="card">
+        <h2>NegotiatorIQ Analysis</h2>
+        <p class="sub">Objective facts calculated directly from the offers above &mdash; no AI, no guesswork.</p>
+        <div id="sellerAnalysisInsights"></div>
+        <div id="sellerAnalysisQuestions"></div>
+        <button class="btn-ghost" id="sellerAnalysisToggleBtn" onclick="toggleSellerAnalysisDetail()" type="button">See full analysis &darr;</button>
+        <div id="sellerAnalysisDetail" style="display:none; margin-top:18px;"></div>
+      </div>
+    </div>
+
+    <div class="email-callout" id="emailCallout">
+      <div class="email-callout-row">
+        <div class="field" style="flex:1; margin-bottom:0;"><label>Client name</label><input type="text" id="emailToName" placeholder="Jane Buyer"></div>
+        <div class="field" style="flex:1; margin-bottom:0;"><label>Client email</label><input type="email" id="emailToAddress" placeholder="jane@email.com"></div>
+        <button class="btn-primary" id="emailSendBtn" onclick="sendResultsEmail()" type="button" style="align-self:flex-end;">Email results &rarr;</button>
+      </div>
+      <div id="emailStatus" class="email-status"></div>
+    </div>
+
+    <div class="navrow">
+      <button class="btn-ghost" id="compareBackBtn" onclick="back()">&larr; Back to financing</button>
+      <button class="btn-primary btn-small" onclick="copySummary()">Copy shareable summary</button>
+    </div>
+  </div>
+
+  <!-- STEP: TOTAL TRANSACTION COST (buyer follow-up, reached via "Use this option") -->
+  <div class="step" id="step-ttc" style="display:none;">
+    <div class="card">
+      <h2>Total transaction cost</h2>
+      <p class="sub">Everything this offer could cost the buyer, start to finish &mdash; not just cash to close.</p>
+      <div id="ttcSummary"></div>
+    </div>
+
+    <div class="card">
+      <h2>Post-contract costs</h2>
+      <p class="sub">Typical Indiana flat fees, paid outside of closing as the transaction moves forward.</p>
+      <div class="sublabel">Appraisal</div>
+      <div class="row"><span>Appraisal fee</span><span class="v num">$500</span></div>
+      <div class="sublabel">Inspection</div>
+      <div class="row"><span>Home inspection</span><span class="v num">$424</span></div>
+      <div class="row"><span>WDS termite inspection</span><span class="v num">$75</span></div>
+      <div class="row"><span>Radon testing</span><span class="v num">$125</span></div>
+      <div class="row total"><span>Post-contract costs</span><span class="v num">$1,124</span></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:16px; margin-bottom:14px;">Summary</h2>
+      <div class="row"><span>Cash to close</span><span class="v num" id="ttcCashLine"></span></div>
+      <div class="row"><span>Post-contract costs</span><span class="v num">$1,124</span></div>
+      <div class="row total"><span style="font-size:16px;">Total transaction cost</span><span class="v num" id="ttcTotal" style="font-size:20px;"></span></div>
+    </div>
+
+    <div class="email-callout" id="emailCalloutTtc">
+      <div class="email-callout-row">
+        <div class="field" style="flex:1; margin-bottom:0;"><label>Client name</label><input type="text" id="emailToNameTtc" placeholder="Jane Buyer"></div>
+        <div class="field" style="flex:1; margin-bottom:0;"><label>Client email</label><input type="email" id="emailToAddressTtc" placeholder="jane@email.com"></div>
+        <button class="btn-primary" id="emailSendBtnTtc" onclick="sendTTCResultsEmail()" type="button" style="align-self:flex-end;">Email results &rarr;</button>
+      </div>
+      <div id="emailStatusTtc" class="email-status"></div>
+    </div>
+
+    <div class="navrow"><span></span><button class="btn-ghost" onclick="goToStep('compare')">&larr; Back to comparison</button></div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="ft-unified-card">
+      <div class="ft-primary">
+        <div class="ft-brandmark">
+          <div class="logo-mark">N</div>
+          <span>Negotiator<b>IQ</b></span>
+        </div>
+        <p class="ft-copy">A clear, shared view of the numbers &mdash; for buyers, sellers, and everyone helping them decide.</p>
+      </div>
+      <div class="ft-contact-card">
+        <p class="ft-label">Kelvin Hart, Realtor</p>
+        <p class="ft-sub">SmartIQ Realty, powered by Fathom Realty &middot; Noblesville, IN</p>
+        <p class="ft-phone">(317) 833-8419</p>
+        <div class="ft-actions">
+          <a class="ft-link" href="mailto:khart@fathomrealty.com" onclick="copyEmailFallback(event)">Email Kelvin</a>
+          <a class="ft-link" href="tel:+13178338419">Call</a>
+        </div>
+      </div>
+    </div>
+    <div class="ft-bottom">
+      <p class="ft-disclaimer">NegotiatorIQ provides an educational estimate of financial impact only &mdash; it is not pricing, negotiation, or lending advice. Actual rates, points costs, taxes, insurance, HOA fees, and lender terms vary and should be verified with your lender before making or accepting any offer. Sharing with clients currently copies a text summary; a persistent shareable link with access controls is a planned next phase.</p>
+      <p>&copy; 2026 SmartIQ Realty</p>
+    </div>
+  </footer>
+</div>
+
+<script>
+let clientType = null;
+let stepIndex = 0;
+const STEP_ELEMS = {deal:'step-deal', type:'step-type', financing:'step-financing', scenarios:'step-scenarios', compare:'step-compare'};
+const STEP_META = {deal:'Deal terms', type:"Who's this for", dealSeller:'Offers', financing:'Buyer financing', scenarios:'Financing options', compare:'Compare'};
+function stepList(){ return clientType==='seller' ? ['deal','type','dealSeller','compare'] : ['deal','type','financing','scenarios','compare']; }
+
+function selectClientType(t){ clientType = t; stepIndex = 2; updateAddDealVisibility(); showStepUI(); }
+function next(){ const list = stepList(); stepIndex = Math.min(stepIndex+1, list.length-1); showStepUI(); }
+function back(){ const list = stepList(); stepIndex = Math.max(stepIndex-1, 0); showStepUI(); }
+function goToStep(id){ const list = stepList(); const idx = list.indexOf(id); stepIndex = idx>=0?idx:0; showStepUI(); }
+
+function showStepUI(scroll){
+  const list = stepList();
+  const id = list[stepIndex];
+  Object.keys(STEP_ELEMS).forEach(k=>{
+    const el = document.getElementById(STEP_ELEMS[k]);
+    if(!el) return;
+    const match = (k===id) || (k==='deal' && id==='dealSeller');
+    el.style.display = match ? 'block' : 'none';
+  });
+  const ttcEl = document.getElementById('step-ttc');
+  if(ttcEl) ttcEl.style.display = 'none';
+  document.getElementById('stepbar').innerHTML = list.map((s,i)=>`<div class="seg ${i<=stepIndex?'done':''}"></div>`).join('');
+  document.getElementById('steplabels').innerHTML = list.map((s,i)=>`<span class="${i===stepIndex?'active':''}">${STEP_META[s]}</span>`).join('');
+  if(scroll!==false) document.getElementById('stepbarWrap').scrollIntoView({behavior:'smooth', block:'start'});
+
+  const dealH2 = document.getElementById('dealH2');
+  const dealSub = document.getElementById('dealSub');
+  if(id==='dealSeller'){
+    if(dealH2) dealH2.textContent = 'Confirm the offer(s) you\'re comparing';
+    if(dealSub) dealSub.textContent = 'Add more offers to compare side by side, or continue to see results for the offer above.';
+  } else {
+    if(dealH2) dealH2.textContent = 'Deal terms';
+    if(dealSub) dealSub.textContent = 'The offer on the table, and the costs that shape its impact for buyer and seller alike.';
+  }
+  const dealBackBtn = document.getElementById('dealBackBtn');
+  if(dealBackBtn) dealBackBtn.style.display = (id==='dealSeller') ? 'inline-block' : 'none';
+
+  const dealBtn = document.getElementById('dealContinueBtn');
+  if(dealBtn) dealBtn.textContent = id==='dealSeller' ? 'See results \u2192' : 'Continue \u2192';
+  const backBtn = document.getElementById('compareBackBtn');
+  if(backBtn) backBtn.textContent = clientType==='seller' ? '\u2190 Back to deal terms' : '\u2190 Back to financing';
+  if(id==='compare' || id==='scenarios' || id==='financing') render();
+  if(id==='deal' || id==='dealSeller') updateAddDealVisibility();
+}
+
+let dealCount = 1;
+function updateClosingCostAuto(suffix){
+  suffix = suffix || '';
+  const offerEl = document.getElementById('offer'+suffix);
+  const closingEl = document.getElementById('sellerClosing'+suffix);
+  if(!offerEl || !closingEl) return;
+  const offerVal = parseFloat(offerEl.value) || 0;
+  closingEl.value = Math.round(offerVal * 0.013);
+}
+
+function updateOfferDependentFields(){
+  const offerVal = parseFloat((document.getElementById('offer')||{}).value) || 0;
+  const taxesEl = document.getElementById('taxesAnnual');
+  const insEl = document.getElementById('insAnnual');
+  if(taxesEl) taxesEl.value = Math.round(offerVal * 0.0085);
+  if(insEl) insEl.value = Math.round(offerVal * 0.0024);
+}
+
+function updatePmiRateAuto(){
+  const pmiEl = document.getElementById('pmiRate');
+  if(!pmiEl) return;
+  const downPct = parseFloat((document.getElementById('downPct')||{}).value) || 0;
+  let rate;
+  if(downPct < 5) rate = 0.94;
+  else if(downPct < 10) rate = 0.715;
+  else if(downPct < 15) rate = 0.48;
+  else if(downPct < 20) rate = 0.29;
+  else rate = 0;
+  pmiEl.value = rate;
+}
+
+const REDUCTIONS_21 = [2,1];
+const REDUCTIONS_31 = [3,2,1];
+
+function updateBuydownRateDisplays(){
+  const marketRate = parseFloat((document.getElementById('marketRate')||{}).value) || 0;
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value = v.toFixed(2); };
+  set('r1_21', marketRate-REDUCTIONS_21[0]);
+  set('r2_21', marketRate-REDUCTIONS_21[1]);
+  set('settled_21', marketRate);
+  set('r1', marketRate-REDUCTIONS_31[0]);
+  set('r2', marketRate-REDUCTIONS_31[1]);
+  set('r3', marketRate-REDUCTIONS_31[2]);
+  set('settled_31', marketRate);
+}
+
+function updateFixedBuydownCost(){
+  const offerEl = document.getElementById('offer');
+  const downPctEl = document.getElementById('downPct');
+  const marketRateEl = document.getElementById('marketRate');
+  const fixRateEl = document.getElementById('fixRate');
+  const fixCostEl = document.getElementById('fixCost');
+  if(!offerEl || !downPctEl || !marketRateEl || !fixRateEl || !fixCostEl) return;
+  const offer = parseFloat(offerEl.value) || 0;
+  const downPct = parseFloat(downPctEl.value) || 0;
+  const marketRate = parseFloat(marketRateEl.value) || 0;
+  const fixRate = parseFloat(fixRateEl.value) || 0;
+  const loanAmt = offer - (offer*downPct/100);
+  fixCostEl.value = Math.round(loanAmt * Math.max(marketRate-fixRate,0)/0.25 * 0.01);
+}
+
+function dealFieldsHTML(n){
+  const mainSplit = (document.querySelector('input[name=commissionSplit]:checked')||{}).value || 'seller';
+  return `
+    <div class="deal-card" id="dealCard${n}">
+      <button class="deal-remove" onclick="removeDeal(${n})" type="button" aria-label="Remove offer">&times;</button>
+      <h4>Offer ${String.fromCharCode(64+n)}</h4>
+      <div class="grid2">
+        <div class="field"><label>Proposed price/Offer price</label><div class="prefix-wrap"><span>$</span><input type="number" id="offer_${n}" value="0" oninput="updateClosingCostAuto('_${n}')"></div></div>
+        <div class="field"><label>Seller's mortgage payoff</label><div class="prefix-wrap"><span>$</span><input type="number" id="payoff_${n}" value="0"></div></div>
+        <div class="field"><label>Broker Compensation</label><div class="suffix-wrap"><input type="number" id="commission_${n}" value="6" step="0.1"><span>%</span></div>
+          <div class="radio-pill" style="margin-top:8px;">
+            <label><input type="radio" name="commissionSplit_${n}" value="seller" ${mainSplit==='seller'?'checked':''}> Charge to Seller</label>
+            <label><input type="radio" name="commissionSplit_${n}" value="split" ${mainSplit==='split'?'checked':''}> Split Charge Seller/Buyer</label>
+          </div>
+        </div>
+        <div class="field"><label>Transaction closing costs</label><div class="prefix-wrap"><span>$</span><input type="number" id="sellerClosing_${n}" value="0" disabled></div>
+          <div class="hint">Auto-estimated at 1.3% of purchase price.</div></div>
+        <div class="field"><label>Seller credit / concession to buyer</label><div class="prefix-wrap"><span>$</span><input type="number" id="sellerCreditBase_${n}" value="0"></div></div>
+        <div class="field"><label>Monthly HOA (optional)</label><div class="prefix-wrap"><span>$</span><input type="number" id="hoa_${n}" value="0"></div></div>
+      </div>
+    </div>`;
+}
+function addDeal(){
+  if(dealCount>=4) return;
+  dealCount++;
+  const container = document.getElementById('extraDeals');
+  container.insertAdjacentHTML('beforeend', dealFieldsHTML(dealCount));
+  updateClosingCostAuto('_'+dealCount);
+  updateAddDealVisibility();
+}
+function removeDeal(n){
+  if(n!==dealCount) return;
+  const el = document.getElementById('dealCard'+n);
+  if(el) el.remove();
+  dealCount--;
+  updateAddDealVisibility();
+}
+function updateAddDealVisibility(){
+  const row = document.getElementById('addDealRow');
+  if(row) row.style.display = (clientType==='seller' && dealCount<4) ? 'flex' : 'none';
+  for(let n=2;n<=4;n++){
+    const card = document.getElementById('dealCard'+n);
+    if(card){
+      const btn = card.querySelector('.deal-remove');
+      if(btn) btn.style.display = (n===dealCount) ? 'flex' : 'none';
+    }
+  }
+}
+
+function quickStart(){
+  goToStep('deal');
+}
+updateClosingCostAuto();
+updateOfferDependentFields();
+updatePmiRateAuto();
+updateBuydownRateDisplays();
+updateFixedBuydownCost();
+showStepUI(false);
+
+function val(id){ return parseFloat(document.getElementById(id).value) || 0; }
+
+function pmt(annualRatePct, principal, months){
+  const r = annualRatePct/100/12;
+  if(months<=0) return 0;
+  if(r===0) return principal/months;
+  return principal*r/(1-Math.pow(1+r,-months));
+}
+function balanceAfter(annualRatePct, principal, months, paymentsMade){
+  const r = annualRatePct/100/12;
+  if(r===0) return Math.max(principal - (principal/months)*paymentsMade,0);
+  const p = pmt(annualRatePct, principal, months);
+  return principal*Math.pow(1+r,paymentsMade) - p*((Math.pow(1+r,paymentsMade)-1)/r);
+}
+
+function buildSchedule(startBalance, rateBlocks, termMonths, opts){
+  let balance = startBalance, remaining = termMonths;
+  const out = [];
+  for(const block of rateBlocks){
+    const payment = pmt(block.rate, balance, remaining);
+    for(let m=0;m<block.months;m++){
+      const ltv = balance/opts.homeValue*100;
+      const pmi = ltv>opts.pmiDrop ? balance*opts.pmiRate/100/12 : 0;
+      const total = payment + opts.taxesMonthly + opts.insMonthly + pmi + opts.hoa;
+      out.push({payment, taxes:opts.taxesMonthly, ins:opts.insMonthly, pmi, hoa:opts.hoa, total, balance});
+      const r = block.rate/100/12;
+      balance = balance*(1+r) - payment;
+      remaining -= 1;
+      if(remaining<=0) break;
+    }
+    if(remaining<=0) break;
+  }
+  return out;
+}
+
+function buydownSubsidyCost(startBalance, marketRate, reductions, termMonths){
+  let balance = startBalance, remaining = termMonths, cost = 0;
+  for(let y=0;y<reductions.length;y++){
+    const fullPay = pmt(marketRate, balance, remaining);
+    const redPay = pmt(marketRate-reductions[y], balance, remaining);
+    cost += 12*(fullPay-redPay);
+    const r = marketRate/100/12;
+    for(let m=0;m<12;m++){ balance = balance*(1+r) - redPay; remaining -=1; }
+  }
+  return cost;
+}
+
+function fmt(n){ return '$'+Math.round(n).toLocaleString(); }
+function fmt1(n){ return '$'+n.toLocaleString(undefined,{maximumFractionDigits:0}); }
+
+function computeScenario(kind){
+  const offer = val('offer');
+  const downPct = val('downPct');
+  const marketRate = val('marketRate');
+  const termMonths = val('termYears')*12;
+  const taxesMonthly = val('taxesAnnual')/12;
+  const insMonthly = val('insAnnual')/12;
+  const pmiRate = val('pmiRate');
+  const pmiDrop = val('pmiDrop');
+  const hoa = val('hoa');
+  const buyerClosing = val('sellerClosing');
+  const earnest = val('earnest');
+  const sellerCreditBase = val('sellerCreditBase');
+  const payoff = val('payoff');
+  const commissionPct = val('commission');
+  const sellerClosing = val('sellerClosing');
+
+  let downPayment = offer*downPct/100;
+  let loanAmount = offer-downPayment;
+  const commissionAmt = offer*commissionPct/100;
+  const commissionSplit = (document.querySelector('input[name=commissionSplit]:checked')||{}).value || 'seller';
+  const commissionSellerShare = commissionSplit==='split' ? commissionAmt/2 : commissionAmt;
+  const commissionBuyerShare = commissionSplit==='split' ? commissionAmt/2 : 0;
+
+  let rateBlocks, buydownCost=0, settleMonths=null, effectivePmiRate=pmiRate;
+  if(kind==='basic'){
+    rateBlocks = [{months:termMonths, rate:marketRate}];
+  } else if(kind==='va'){
+    downPayment = 0;
+    loanAmount = offer;
+    effectivePmiRate = 0;
+    rateBlocks = [{months:termMonths, rate:marketRate}];
+  } else if(kind==='21'){
+    const [r1,r2] = REDUCTIONS_21;
+    rateBlocks = [
+      {months:12, rate:marketRate-r1},
+      {months:12, rate:marketRate-r2},
+      {months:Math.max(termMonths-24,1), rate:marketRate}
+    ];
+    buydownCost = buydownSubsidyCost(loanAmount, marketRate, [r1,r2], termMonths);
+    settleMonths = 24;
+  } else if(kind==='31'){
+    const [r1,r2,r3] = REDUCTIONS_31;
+    rateBlocks = [
+      {months:12, rate:marketRate-r1},
+      {months:12, rate:marketRate-r2},
+      {months:12, rate:marketRate-r3},
+      {months:Math.max(termMonths-36,1), rate:marketRate}
+    ];
+    buydownCost = buydownSubsidyCost(loanAmount, marketRate, [r1,r2,r3], termMonths);
+    settleMonths = 36;
+  } else if(kind==='fixed'){
+    const fixRate = val('fixRate');
+    rateBlocks = [{months:termMonths, rate:fixRate}];
+    buydownCost = loanAmount * Math.max(marketRate-fixRate,0)/0.25 * 0.01;
+  } else if(kind==='cash'){
+    downPayment = offer;
+    loanAmount = 0;
+    rateBlocks = [{months:termMonths, rate:marketRate}];
+  }
+
+  const schedule = buildSchedule(loanAmount, rateBlocks, termMonths, {homeValue:offer, pmiRate:effectivePmiRate, pmiDrop, taxesMonthly, insMonthly, hoa});
+
+  const sellerProceeds = offer - payoff - commissionSellerShare - sellerClosing - sellerCreditBase;
+
+  const totalOOP = downPayment + buyerClosing + commissionBuyerShare + buydownCost;
+  const fundsDue = totalOOP - earnest - sellerCreditBase;
+
+  const startPayment = schedule[0].total;
+  const settlePayment = settleMonths ? schedule[Math.min(settleMonths,schedule.length-1)].total : null;
+  const finalPayment = schedule[schedule.length-1].total;
+
+  return {kind, schedule, downPayment, loanAmount, buydownCost, offer, payoff, commissionAmt:commissionSellerShare, commissionBuyerShare, commissionSellerPct:(commissionSplit==='split'?50:100), sellerClosing, sellerCreditBase, sellerProceeds, totalOOP, buyerClosing, earnest, fundsDue, startPayment, settleMonths, settlePayment, finalPayment};
+}
+
+const KIND_META = {
+  basic:{label:'Standard Fixed Mortgage', color:'#5C6672'},
+  va:{label:'VA', color:'#7A4C6B'},
+  '21':{label:'2/1 buydown', color:'#B08D57'},
+  '31':{label:'3/1 buydown', color:'#2F6F6B'},
+  fixed:{label:'Fixed buydown', color:'#C40000'},
+  cash:{label:'Cash purchase', color:'#2F5A8C'}
+};
+
+const LOCKED_FIELDS = ['r1_21','r2_21','settled_21','r1','r2','r3','settled_31','basicRateDisplay','vaRateDisplay','fixCost','sellerClosing','buyerClosingDisplay','taxesAnnual','insAnnual','pmiRate'];
+
+function render(){
+  const active = [];
+  if(document.getElementById('enBasic').checked) active.push('basic');
+  if(document.getElementById('enVA').checked) active.push('va');
+  if(document.getElementById('en21').checked) active.push('21');
+  if(document.getElementById('en31').checked) active.push('31');
+  if(document.getElementById('enFix').checked) active.push('fixed');
+  if(document.getElementById('enCash').checked) active.push('cash');
+  document.getElementById('blockBasic').style.opacity = document.getElementById('enBasic').checked?1:.4;
+  document.getElementById('blockVA').style.opacity = document.getElementById('enVA').checked?1:.4;
+  document.getElementById('block21').style.opacity = document.getElementById('en21').checked?1:.4;
+  document.getElementById('block31').style.opacity = document.getElementById('en31').checked?1:.4;
+  document.getElementById('blockFix').style.opacity = document.getElementById('enFix').checked?1:.4;
+
+  document.getElementById('basicRateDisplay').value = val('marketRate');
+  document.getElementById('vaRateDisplay').value = val('marketRate');
+  document.getElementById('buyerClosingDisplay').value = val('sellerClosing');
+  updateOfferDependentFields();
+  updatePmiRateAuto();
+  updateBuydownRateDisplays();
+  updateFixedBuydownCost();
+
+  const clientView = document.getElementById('clientView').checked;
+  document.querySelectorAll('#step-deal input, #step-financing input, #step-scenarios input').forEach(i=>{
+    if(!LOCKED_FIELDS.includes(i.id)) i.disabled = clientView;
+  });
+
+  document.getElementById('buyerView').style.display = clientType==='seller' ? 'none' : 'block';
+  document.getElementById('sellerView').style.display = clientType==='seller' ? 'block' : 'none';
+
+  if(stepList()[stepIndex]!=='compare') return;
+
+  if(clientType==='seller'){
+    renderMultiOfferSheet();
+    return;
+  }
+
+  if(active.length===0){
+    document.getElementById('scenGrid').innerHTML = '<p class="hero-note">Turn on at least one financing option to see results.</p>';
+    document.getElementById('chartLegend').innerHTML = '';
+    document.getElementById('verdict').innerHTML = '';
+    document.getElementById('analysisInsights').innerHTML = '';
+    document.getElementById('analysisQuestions').innerHTML = '';
+    document.getElementById('analysisDetail').innerHTML = '';
+    document.getElementById('netTable').innerHTML = '';
+    return;
+  }
+
+  const results = active.map(computeScenario);
+  const grid = document.getElementById('scenGrid');
+  const cheapest = results.reduce((a,b)=> (a.fundsDue+a.startPayment*12) < (b.fundsDue+b.startPayment*12) ? a:b );
+
+  grid.innerHTML = results.map(r=>{
+    const m = KIND_META[r.kind];
+    const isBest = r===cheapest;
+    const s0 = r.schedule[0];
+    return `<div class="scen-card ${isBest?'best':''}">
+      ${isBest?'<div class="badge">Lowest 1-yr cost</div>':''}
+      <h3>${m.label}</h3>
+
+      <div class="row"><span>Down payment</span><span class="v num">${fmt(r.downPayment)}</span></div>
+      <div class="row"><span>Closing costs</span><span class="v num">${fmt(r.buyerClosing)}</span></div>
+      ${r.commissionBuyerShare>0?`<div class="row"><span>Broker Compensation</span><span class="v num"><span class="pct-inline">${r.commissionSellerPct}%</span>${fmt(r.commissionBuyerShare)}</span></div>`:''}
+      ${r.buydownCost>0?`<div class="row"><span>Buydown cost</span><span class="v num">${fmt(r.buydownCost)}</span></div>`:''}
+      ${r.earnest>0?`<div class="row"><span>Earnest money credit</span><span class="v num">(${fmt(r.earnest)})</span></div>`:''}
+      ${r.sellerCreditBase>0?`<div class="row"><span>Seller credit</span><span class="v num">(${fmt(r.sellerCreditBase)})</span></div>`:''}
+      <div class="row total"><span>Cash to close</span><span class="v num">${fmt(r.fundsDue)}</span></div>
+
+      <div class="sublabel">Monthly payment (starting)</div>
+      <div class="row"><span>Principal &amp; interest</span><span class="v num">${fmt(s0.payment)}</span></div>
+      <div class="row"><span>Taxes</span><span class="v num">${fmt(s0.taxes)}</span></div>
+      <div class="row"><span>Insurance</span><span class="v num">${fmt(s0.ins)}</span></div>
+      ${s0.pmi>0?`<div class="row"><span>PMI</span><span class="v num">${fmt(s0.pmi)}</span></div>`:''}
+      ${s0.hoa>0?`<div class="row"><span>HOA</span><span class="v num">${fmt(s0.hoa)}</span></div>`:''}
+      <div class="row total"><span>Starting payment</span><span class="v num">${fmt(r.startPayment)}/mo</span></div>
+
+      ${r.settlePayment!==null?`<div class="row"><span>Year ${r.settleMonths/12+1} payment (settles)</span><span class="v num">${fmt(r.settlePayment)}/mo</span></div>`:''}
+      ${r.kind==='cash'?`<div class="row"><span>Financing</span><span class="v">All cash \u2014 no loan</span></div>`:''}
+      <div class="row"><span>Payment once PMI drops</span><span class="v num">${fmt(r.finalPayment)}/mo</span></div>
+      <button class="use-btn" onclick="useOption('${r.kind}')" type="button">Use this option &rarr;</button>
+    </div>`;
+  }).join('');
+
+  drawChart(results);
+
+  const legend = document.getElementById('chartLegend');
+  legend.innerHTML = results.map(r=>`<span><i style="background:${KIND_META[r.kind].color}"></i>${KIND_META[r.kind].label}</span>`).join('');
+
+  const baseline = results.find(r=>r.kind==='basic') || results[0];
+  const baseLabel = KIND_META[baseline.kind].label;
+  const alt = results.filter(r=>r!==baseline).sort((a,b)=>(a.fundsDue+a.startPayment*12)-(b.fundsDue+b.startPayment*12))[0];
+  const verdictEl = document.getElementById('verdict');
+  if(alt){
+    const monthlySavings = baseline.startPayment-alt.startPayment;
+    const extraCash = alt.fundsDue-baseline.fundsDue;
+    verdictEl.innerHTML = `<b>${KIND_META[alt.kind].label}</b> starts ${monthlySavings>=0?fmt(monthlySavings)+' lower':fmt(-monthlySavings)+' higher'} per month than ${baseLabel.toLowerCase()}, and needs ${extraCash>=0?fmt(extraCash)+' more':fmt(-extraCash)+' less'} cash at closing. Use that gap to see how it compares to an equivalent price adjustment.`;
+  } else {
+    verdictEl.innerHTML = 'Turn on a second financing option above to see a side-by-side impact.';
+  }
+
+  renderAnalysis(results, baseline);
+  renderNetSheet(results);
+}
+
+/* ===== NegotiatorIQ Analysis: Layer 1 (deterministic facts) + Layer 2 (derived metrics) ===== */
+/* Layer 3 (AI narrative) is intentionally not implemented yet \u2014 see project notes. Everything
+   below is plain calculation: no network calls, no external data, fully auditable. */
+
+function computeAnalysisFacts(results, baseline){
+  const multiple = results.length>1;
+  let lowestCash=null, highestCash=null, lowestStart=null, lowestPermanent=null;
+  if(multiple){
+    lowestCash = results.reduce((a,b)=> b.fundsDue<a.fundsDue ? b:a );
+    highestCash = results.reduce((a,b)=> b.fundsDue>a.fundsDue ? b:a );
+    lowestStart = results.reduce((a,b)=> b.startPayment<a.startPayment ? b:a );
+    lowestPermanent = results.reduce((a,b)=> b.finalPayment<a.finalPayment ? b:a );
+  }
+
+  let largestAdj = null;
+  results.filter(r=>r.settlePayment!==null).forEach(r=>{
+    const increase = r.settlePayment - r.startPayment;
+    if(!largestAdj || increase>largestAdj.increase) largestAdj = {option:r, increase, effectiveYear: r.settleMonths/12+1};
+  });
+
+  const pmiFacts = results.map(r=>{
+    const hasPmi = r.schedule[0].pmi>0;
+    let endMonth = null;
+    if(hasPmi){ for(let i=0;i<r.schedule.length;i++){ if(r.schedule[i].pmi===0){ endMonth=i; break; } } }
+    return {option:r, hasPmi, endMonth};
+  });
+
+  const horizonDelta = (r, months)=>{
+    const rN = Math.min(months, r.schedule.length);
+    const bN = Math.min(months, baseline.schedule.length);
+    let rSum=0,bSum=0;
+    for(let i=0;i<rN;i++) rSum+=r.schedule[i].total;
+    for(let i=0;i<bN;i++) bSum+=baseline.schedule[i].total;
+    return rSum-bSum;
+  };
+
+  const metrics = results.filter(r=>r!==baseline).map(r=>{
+    const additionalCash = r.fundsDue - baseline.fundsDue;
+    const startSavings = baseline.startPayment - r.startPayment;
+    const settledSavings = baseline.finalPayment - r.finalPayment;
+    const paymentShock = r.settlePayment!==null ? (r.settlePayment-r.startPayment)/r.startPayment*100 : null;
+    let breakEvenMonths = null;
+    if(additionalCash<=0){
+      breakEvenMonths = 0;
+    } else {
+      let cum=0;
+      const n = Math.min(r.schedule.length, baseline.schedule.length);
+      for(let i=0;i<n;i++){
+        cum += (baseline.schedule[i].total - r.schedule[i].total);
+        if(cum>=additionalCash){ breakEvenMonths=i+1; break; }
+      }
+    }
+    return {option:r, additionalCash, startSavings, settledSavings, paymentShock, breakEvenMonths,
+      cost5:horizonDelta(r,60), cost10:horizonDelta(r,120), cost30:horizonDelta(r,360)};
+  });
+
+  return {multiple, lowestCash, highestCash, lowestStart, lowestPermanent, largestAdj, pmiFacts, metrics};
+}
+
+function buildCandidateInsights(a, baseline){
+  const list = [];
+  if(a.multiple){
+    const diff = a.highestCash.fundsDue - a.lowestCash.fundsDue;
+    list.push({priority:90, importance:'high', title:'Lowest cash requirement',
+      message:`${KIND_META[a.lowestCash.kind].label} needs the least cash to close at ${fmt(a.lowestCash.fundsDue)}${diff>0?', '+fmt(diff)+' less than the highest option':''}.`});
+    list.push({priority:80, importance:'high', title:'Lowest starting payment',
+      message:`${KIND_META[a.lowestStart.kind].label} has the lowest starting payment at ${fmt(a.lowestStart.startPayment)}/mo.`});
+    list.push({priority:75, importance:'medium', title:'Lowest permanent payment',
+      message:`${KIND_META[a.lowestPermanent.kind].label} settles to the lowest long-run payment at ${fmt(a.lowestPermanent.finalPayment)}/mo once PMI drops.`});
+  }
+  if(a.largestAdj){
+    list.push({priority:95, importance:'high', title:'Largest future payment increase',
+      message:`${KIND_META[a.largestAdj.option.kind].label} jumps by ${fmt(a.largestAdj.increase)}/mo when it settles in Year ${a.largestAdj.effectiveYear}.`});
+  }
+  a.metrics.forEach(m=>{
+    if(m.breakEvenMonths!==null && m.breakEvenMonths>0){
+      list.push({priority:70, importance:'medium', title:'Break-even timing',
+        message:`${KIND_META[m.option.kind].label} costs ${fmt(m.additionalCash)} more upfront than ${KIND_META[baseline.kind].label.toLowerCase()}, breaking even around ${(m.breakEvenMonths/12).toFixed(1)} years through lower payments.`});
+    } else if(m.breakEvenMonths===null && m.additionalCash>0){
+      list.push({priority:60, importance:'medium', title:"Doesn't break even",
+        message:`${KIND_META[m.option.kind].label} costs ${fmt(m.additionalCash)} more upfront than ${KIND_META[baseline.kind].label.toLowerCase()} and doesn't recoup that cost through lower payments within the loan term.`});
+    }
+    if(m.paymentShock!==null && m.paymentShock>15){
+      list.push({priority:85, importance:'high', title:'Payment shock',
+        message:`${KIND_META[m.option.kind].label}'s payment rises ${m.paymentShock.toFixed(0)}% once it settles \u2014 worth confirming the buyer can absorb that increase.`});
+    }
+  });
+  a.pmiFacts.forEach(p=>{
+    if(p.hasPmi && p.endMonth!==null){
+      list.push({priority:50, importance:'medium', title:'PMI drop-off',
+        message:`${KIND_META[p.option.kind].label} carries PMI until around year ${(p.endMonth/12).toFixed(1)}, then the payment drops.`});
+    } else if(p.hasPmi && p.endMonth===null){
+      list.push({priority:55, importance:'medium', title:'PMI persists',
+        message:`${KIND_META[p.option.kind].label} keeps PMI for the full loan term at this down payment.`});
+    }
+  });
+  return list.sort((x,y)=>y.priority-x.priority);
+}
+
+function renderAnalysis(results, baseline){
+  const a = computeAnalysisFacts(results, baseline);
+  const candidates = buildCandidateInsights(a, baseline);
+  const top = candidates.slice(0,4);
+
+  document.getElementById('analysisInsights').innerHTML = top.length ? ('<div class="insight-list">' + top.map(c=>`
+    <div class="insight-item importance-${c.importance}">
+      <span class="ipill">${c.importance}</span>
+      <div class="itext"><b>${c.title}</b><span>${c.message}</span></div>
+    </div>`).join('') + '</div>') : '<p class="hero-note">Turn on at least one financing option to see analysis.</p>';
+
+  const questions = [];
+  if(a.metrics.some(m=>m.additionalCash>0)) questions.push('How important is preserving cash after closing?');
+  if(a.largestAdj) questions.push(`Are you comfortable with a higher payment beginning in Year ${a.largestAdj.effectiveYear}?`);
+  if(top.length) questions.push('How long do you expect to keep this mortgage?');
+  document.getElementById('analysisQuestions').innerHTML = questions.length ? `<div class="questions-box"><b>Questions to consider</b><ul>${questions.map(q=>`<li>${q}</li>`).join('')}</ul></div>` : '';
+
+  const btn = document.getElementById('analysisToggleBtn');
+  btn.style.display = a.metrics.length ? 'inline-block' : 'none';
+
+  const detailRows = [
+    {label:'Additional cash vs '+KIND_META[baseline.kind].label, get:m=>fmtSigned(m.additionalCash)},
+    {label:'Starting payment savings', get:m=>fmtSigned(m.startSavings)+'/mo'},
+    {label:'Settled payment savings', get:m=>fmtSigned(m.settledSavings)+'/mo'},
+    {label:'Payment shock at settle', get:m=>m.paymentShock!==null?m.paymentShock.toFixed(1)+'%':'\u2014'},
+    {label:'Break-even', get:m=>m.breakEvenMonths===null?'Beyond loan term':m.breakEvenMonths===0?'Immediate':(m.breakEvenMonths/12).toFixed(1)+' yrs'},
+    {label:'Net cost vs baseline (5 yr)', get:m=>fmtSigned(m.cost5)},
+    {label:'Net cost vs baseline (10 yr)', get:m=>fmtSigned(m.cost10)},
+    {label:'Net cost vs baseline (30 yr)', get:m=>fmtSigned(m.cost30)}
+  ];
+  let tableHtml = '<table class="analysis-table"><thead><tr><th></th>' + a.metrics.map(m=>`<th>${KIND_META[m.option.kind].label}</th>`).join('') + '</tr></thead><tbody>';
+  detailRows.forEach(row=>{
+    tableHtml += `<tr><td>${row.label}</td>` + a.metrics.map(m=>`<td>${row.get(m)}</td>`).join('') + '</tr>';
+  });
+  tableHtml += '</tbody></table>';
+  document.getElementById('analysisDetail').innerHTML = a.metrics.length ? tableHtml : '<p class="hero-note">Turn on a second financing option to see comparative metrics.</p>';
+}
+
+function toggleAnalysisDetail(){
+  const el = document.getElementById('analysisDetail');
+  const btn = document.getElementById('analysisToggleBtn');
+  const show = el.style.display==='none';
+  el.style.display = show?'block':'none';
+  btn.textContent = show ? 'Hide full analysis \u2191' : 'See full analysis \u2193';
+}
+
+function fmtSigned(n){ return n<0 ? '('+fmt(-n)+')' : fmt(n); }
+
+function computeDealProceeds(n){
+  const suffix = n===1 ? '' : '_'+n;
+  const offer = val('offer'+suffix);
+  const payoff = val('payoff'+suffix);
+  const commissionPct = val('commission'+suffix);
+  const sellerClosing = val('sellerClosing'+suffix);
+  const sellerCreditBase = val('sellerCreditBase'+suffix);
+  const commissionAmtFull = offer*commissionPct/100;
+  const splitName = n===1 ? 'commissionSplit' : 'commissionSplit_'+n;
+  const split = (document.querySelector(`input[name=${splitName}]:checked`)||{}).value || 'seller';
+  const commissionAmt = split==='split' ? commissionAmtFull/2 : commissionAmtFull;
+  const sellerProceeds = offer - payoff - commissionAmt - sellerClosing - sellerCreditBase;
+  return {label:'Offer '+String.fromCharCode(64+n), offer, payoff, commissionAmt, commissionSellerPct:(split==='split'?50:100), sellerClosing, sellerCreditBase, sellerProceeds};
+}
+
+function renderMultiOfferSheet(){
+  const deals = [];
+  for(let n=1;n<=dealCount;n++) deals.push(computeDealProceeds(n));
+
+  document.getElementById('sellerNetH2').textContent = "Seller's net proceeds";
+  document.getElementById('sellerNetSub').textContent = deals.length>1
+    ? 'How each offer nets out for the seller, side by side.'
+    : 'What the seller walks away with on this offer, line by line.';
+
+  const rows = [
+    {label:'Offer price', get:d=>d.offer},
+    {label:'Mortgage payoff', get:d=>-d.payoff},
+    {label:'Broker Compensation', get:d=>-d.commissionAmt, pct:d=>d.commissionSellerPct},
+    {label:'Closing costs', get:d=>-d.sellerClosing},
+    {label:'Credit to buyer', get:d=>-d.sellerCreditBase}
+  ];
+  let html = '<thead><tr><th></th>' + deals.map(d=>`<th>${d.label}</th>`).join('') + '</tr></thead><tbody>';
+  rows.forEach(row=>{
+    html += `<tr><td>${row.label}</td>` + deals.map(d=>{
+      const v = row.get(d);
+      const pctHtml = row.pct ? `<span class="pct-inline">${row.pct(d)}%</span>` : '';
+      return `<td class="${v<0?'neg':''}">${v===0?'\u2014':pctHtml+fmtSigned(v)}</td>`;
+    }).join('') + '</tr>';
+  });
+  html += '<tr class="total"><td>Net proceeds to seller</td>' + deals.map(d=>`<td>${fmt(d.sellerProceeds)}</td>`).join('') + '</tr>';
+  html += '</tbody>';
+  document.getElementById('netTable').innerHTML = html;
+
+  renderSellerAnalysis(deals);
+}
+
+/* ===== Seller-side NegotiatorIQ Analysis: offer-vs-offer facts, not financing-scenario facts ===== */
+
+function computeSellerAnalysisFacts(deals){
+  const multiple = deals.length>1;
+  let highestProceeds=null, highestPrice=null, lowestProceeds=null, largestConcession=null;
+  if(multiple){
+    highestProceeds = deals.reduce((a,b)=> b.sellerProceeds>a.sellerProceeds ? b:a );
+    lowestProceeds = deals.reduce((a,b)=> b.sellerProceeds<a.sellerProceeds ? b:a );
+    highestPrice = deals.reduce((a,b)=> b.offer>a.offer ? b:a );
+    largestConcession = deals.reduce((a,b)=> b.sellerCreditBase>a.sellerCreditBase ? b:a );
+  }
+  const priceMismatch = multiple && highestProceeds!==highestPrice;
+
+  const metrics = deals.map(d=>{
+    const transactionCost = d.commissionAmt + d.sellerClosing + d.sellerCreditBase;
+    const proceedsYield = d.offer>0 ? d.sellerProceeds/d.offer*100 : 0;
+    return {deal:d, transactionCost, proceedsYield};
+  });
+
+  return {multiple, highestProceeds, highestPrice, lowestProceeds, largestConcession, priceMismatch, metrics};
+}
+
+function buildSellerCandidateInsights(a){
+  const list = [];
+  if(a.multiple){
+    const spread = a.highestProceeds.sellerProceeds - a.lowestProceeds.sellerProceeds;
+    list.push({priority:90, importance:'high', title:'Highest net proceeds',
+      message:`${a.highestProceeds.label} nets the most at ${fmt(a.highestProceeds.sellerProceeds)}${spread>0?', '+fmt(spread)+' more than the lowest-netting offer':''}.`});
+
+    if(a.priceMismatch){
+      list.push({priority:95, importance:'high', title:'Highest price isn\u2019t highest proceeds',
+        message:`${a.highestPrice.label} has the highest offer price at ${fmt(a.highestPrice.offer)}, but ${a.highestProceeds.label} nets more once payoff, commission, and concessions are factored in.`});
+    } else {
+      list.push({priority:65, importance:'medium', title:'Price and proceeds agree',
+        message:`${a.highestPrice.label} has both the highest price and the highest net proceeds \u2014 no hidden tradeoff here.`});
+    }
+
+    if(a.largestConcession.sellerCreditBase>0){
+      list.push({priority:70, importance:'medium', title:'Largest concession',
+        message:`${a.largestConcession.label} includes the largest credit to the buyer at ${fmt(a.largestConcession.sellerCreditBase)}.`});
+    }
+  }
+  a.metrics.forEach(m=>{
+    if(m.transactionCost>0 && a.multiple){
+      list.push({priority:40, importance:'medium', title:`${m.deal.label}: transaction cost`,
+        message:`Commission, closing costs, and concessions on ${m.deal.label} total ${fmt(m.transactionCost)} \u2014 ${(m.transactionCost/m.deal.offer*100).toFixed(1)}% of the offer price.`});
+    }
+  });
+  if(!a.multiple && a.metrics.length){
+    const m = a.metrics[0];
+    list.push({priority:80, importance:'high', title:'Net proceeds',
+      message:`This offer nets ${m.proceedsYield.toFixed(1)}% of the offer price after payoff, commission, closing costs, and any credit to the buyer.`});
+    if(m.transactionCost>0){
+      list.push({priority:60, importance:'medium', title:'Transaction cost',
+        message:`Commission, closing costs, and any credit total ${fmt(m.transactionCost)} on this offer.`});
+    }
+  }
+  return list.sort((x,y)=>y.priority-x.priority);
+}
+
+function renderSellerAnalysis(deals){
+  const a = computeSellerAnalysisFacts(deals);
+  const candidates = buildSellerCandidateInsights(a);
+  const top = candidates.slice(0,4);
+
+  document.getElementById('sellerAnalysisInsights').innerHTML = top.length ? ('<div class="insight-list">' + top.map(c=>`
+    <div class="insight-item importance-${c.importance}">
+      <span class="ipill">${c.importance}</span>
+      <div class="itext"><b>${c.title}</b><span>${c.message}</span></div>
+    </div>`).join('') + '</div>') : '';
+
+  const questions = [];
+  if(a.multiple){
+    questions.push('How much does closing timeline or financing certainty matter, beyond net proceeds?');
+    if(a.priceMismatch) questions.push('Is the highest-priced offer worth pursuing despite netting less?');
+  } else {
+    questions.push('Would a different credit or concession structure change what this offer nets?');
+  }
+  document.getElementById('sellerAnalysisQuestions').innerHTML = `<div class="questions-box"><b>Questions to consider</b><ul>${questions.map(q=>`<li>${q}</li>`).join('')}</ul></div>`;
+
+  const btn = document.getElementById('sellerAnalysisToggleBtn');
+  let tableHtml = '<table class="analysis-table"><thead><tr><th></th>' + a.metrics.map(m=>`<th>${m.deal.label}</th>`).join('') + '</tr></thead><tbody>';
+  tableHtml += `<tr><td>Offer price</td>` + a.metrics.map(m=>`<td>${fmt(m.deal.offer)}</td>`).join('') + '</tr>';
+  tableHtml += `<tr><td>Mortgage payoff (% of price)</td>` + a.metrics.map(m=>`<td>${(m.deal.payoff/m.deal.offer*100).toFixed(1)}%</td>`).join('') + '</tr>';
+  tableHtml += `<tr><td>Transaction cost (% of price)</td>` + a.metrics.map(m=>`<td>${fmt(m.transactionCost)} (${(m.transactionCost/m.deal.offer*100).toFixed(1)}%)</td>`).join('') + '</tr>';
+  tableHtml += `<tr class="total"><td>Net proceeds (% of price)</td>` + a.metrics.map(m=>`<td>${fmt(m.deal.sellerProceeds)} (${m.proceedsYield.toFixed(1)}%)</td>`).join('') + '</tr>';
+  tableHtml += '</tbody></table>';
+  document.getElementById('sellerAnalysisDetail').innerHTML = tableHtml;
+}
+
+function toggleSellerAnalysisDetail(){
+  const el = document.getElementById('sellerAnalysisDetail');
+  const btn = document.getElementById('sellerAnalysisToggleBtn');
+  const show = el.style.display==='none';
+  el.style.display = show?'block':'none';
+  btn.textContent = show ? 'Hide full analysis \u2191' : 'See full analysis \u2193';
+}
+
+function renderNetSheet(results){
+  document.getElementById('sellerNetH2').textContent = "Seller's net proceeds";
+  document.getElementById('sellerNetSub').textContent = 'What the seller walks away with under each option on the table, line by line.';
+  const rows = [
+    {label:'Offer price', get:r=>r.offer},
+    {label:'Mortgage payoff', get:r=>-r.payoff},
+    {label:'Broker Compensation', get:r=>-r.commissionAmt, pct:r=>r.commissionSellerPct},
+    {label:'Closing costs', get:r=>-r.sellerClosing},
+    {label:'Credit to buyer', get:r=>-r.sellerCreditBase}
+  ];
+  let html = '<thead><tr><th></th>' + results.map(r=>`<th>${KIND_META[r.kind].label}</th>`).join('') + '</tr></thead><tbody>';
+  rows.forEach(row=>{
+    html += `<tr><td>${row.label}</td>` + results.map(r=>{
+      const v = row.get(r);
+      const pctHtml = row.pct ? `<span class="pct-inline">${row.pct(r)}%</span>` : '';
+      return `<td class="${v<0?'neg':''}">${v===0?'\u2014':pctHtml+fmtSigned(v)}</td>`;
+    }).join('') + '</tr>';
+  });
+  html += '<tr class="total"><td>Net proceeds to seller</td>' + results.map(r=>`<td>${fmt(r.sellerProceeds)}</td>`).join('') + '</tr>';
+  html += '</tbody>';
+  document.getElementById('netTable').innerHTML = html;
+}
+
+function drawChart(results){
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.clientWidth || 600, h = 220;
+  canvas.width = w; canvas.height = h;
+  ctx.clearRect(0,0,w,h);
+  const months = 60;
+  const pad = {l:50,r:10,t:10,b:24};
+  let maxV=0, minV=Infinity;
+  results.forEach(r=>r.schedule.slice(0,months).forEach(s=>{maxV=Math.max(maxV,s.total); minV=Math.min(minV,s.total);}));
+  maxV = maxV*1.05; minV = minV*0.95;
+  const x = i => pad.l + (w-pad.l-pad.r)*i/(months-1);
+  const y = v => h-pad.b - (h-pad.t-pad.b)*(v-minV)/(maxV-minV || 1);
+
+  ctx.strokeStyle = 'rgba(19,15,15,0.12)'; ctx.lineWidth=1; ctx.font='11px Inter,sans-serif'; ctx.fillStyle='#625A5A';
+  for(let g=0; g<=4; g++){
+    const v = minV + (maxV-minV)*g/4;
+    const yy = y(v);
+    ctx.beginPath(); ctx.moveTo(pad.l,yy); ctx.lineTo(w-pad.r,yy); ctx.stroke();
+    ctx.fillText('$'+Math.round(v).toLocaleString(), 4, yy+4);
+  }
+  [0,12,24,36,48,59].forEach(mi=>{
+    ctx.fillText('yr '+Math.ceil((mi+1)/12), x(mi)-10, h-6);
+  });
+
+  results.forEach(r=>{
+    ctx.strokeStyle = KIND_META[r.kind].color; ctx.lineWidth=2; ctx.beginPath();
+    r.schedule.slice(0,months).forEach((s,i)=>{ const px=x(i), py=y(s.total); i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+    ctx.stroke();
+  });
+}
+
+const APPRAISAL_FEE = 500;
+const INSPECTION_FEE = 624;
+
+let ttcSelectedKind = null;
+function useOption(kind){
+  ttcSelectedKind = kind;
+  const r = computeScenario(kind);
+  const s0 = r.schedule[0];
+  const m = KIND_META[kind];
+
+  document.getElementById('ttcSummary').innerHTML = `
+    <h3 style="font-size:15px; color:var(--navy); margin:0 0 10px;">${m.label}</h3>
+    <div class="row"><span>Down payment</span><span class="v num">${fmt(r.downPayment)}</span></div>
+    <div class="row"><span>Closing costs</span><span class="v num">${fmt(r.buyerClosing)}</span></div>
+    ${r.commissionBuyerShare>0?`<div class="row"><span>Broker Compensation</span><span class="v num"><span class="pct-inline">${r.commissionSellerPct}%</span>${fmt(r.commissionBuyerShare)}</span></div>`:''}
+    ${r.buydownCost>0?`<div class="row"><span>Buydown cost</span><span class="v num">${fmt(r.buydownCost)}</span></div>`:''}
+    ${r.earnest>0?`<div class="row"><span>Earnest money credit</span><span class="v num">(${fmt(r.earnest)})</span></div>`:''}
+    ${r.sellerCreditBase>0?`<div class="row"><span>Seller credit</span><span class="v num">(${fmt(r.sellerCreditBase)})</span></div>`:''}
+    <div class="row total"><span>Cash to close</span><span class="v num">${fmt(r.fundsDue)}</span></div>
+    <div class="sublabel">Monthly payment (starting)</div>
+    <div class="row"><span>Principal &amp; interest</span><span class="v num">${fmt(s0.payment)}</span></div>
+    <div class="row"><span>Taxes</span><span class="v num">${fmt(s0.taxes)}</span></div>
+    <div class="row"><span>Insurance</span><span class="v num">${fmt(s0.ins)}</span></div>
+    ${s0.pmi>0?`<div class="row"><span>PMI</span><span class="v num">${fmt(s0.pmi)}</span></div>`:''}
+    ${s0.hoa>0?`<div class="row"><span>HOA</span><span class="v num">${fmt(s0.hoa)}</span></div>`:''}
+    <div class="row total"><span>Starting payment</span><span class="v num">${fmt(r.startPayment)}/mo</span></div>
+  `;
+
+  const total = r.fundsDue + APPRAISAL_FEE + INSPECTION_FEE;
+  document.getElementById('ttcCashLine').textContent = fmt(r.fundsDue);
+  document.getElementById('ttcTotal').textContent = fmt(total);
+
+  Object.keys(STEP_ELEMS).forEach(k=>{ const el = document.getElementById(STEP_ELEMS[k]); if(el) el.style.display = 'none'; });
+  document.getElementById('step-ttc').style.display = 'block';
+  document.getElementById('stepbarWrap').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ===== EmailJS results delivery =====
+   Fill these in once the NegotiatorIQ EmailJS account/template exist:
+   - EMAILJS_PUBLIC_KEY: EmailJS dashboard > Account > General
+   - EMAILJS_SERVICE_ID: the connected email service (e.g. Gmail) you create
+   - EMAILJS_TEMPLATE_ID: the template built from negotiatoriq-results-email-template.html
+   In the EmailJS template settings, set "To Email" to {{to_email}} so it sends
+   to whatever address is passed in from the app, not a fixed address. */
+const EMAILJS_PUBLIC_KEY = 'UeOqjplYLD-YJBKUd';
+const EMAILJS_SERVICE_ID = 'service_9cowq0f';
+const EMAILJS_TEMPLATE_ID = 'template_2o13r79';
+
+(function(){
+  try {
+    if(window.emailjs && EMAILJS_PUBLIC_KEY!=='YOUR_PUBLIC_KEY'){
+      emailjs.init({publicKey: EMAILJS_PUBLIC_KEY});
+    }
+  } catch(e){ /* EmailJS not configured yet */ }
+})();
+
+function buildResultsHtmlEmail(){
+  if(clientType==='seller'){
+    const deals = [];
+    for(let n=1;n<=dealCount;n++) deals.push(computeDealProceeds(n));
+
+    const dealBlocks = deals.map(d=>`
+      <tr><td style="padding:14px 0;border-bottom:1px solid #E8E3DD;">
+        <p style="margin:0 0 8px 0;font-weight:700;color:#151922;font-size:14px;">${d.label}</p>
+        <table cellpadding="0" cellspacing="0" style="font-size:13px; color:#3F4652; width:100%;">
+          <tr><td style="padding:2px 10px 2px 0;">Offer price</td><td style="padding:2px 0;font-weight:700;color:#151922;">${fmt(d.offer)}</td></tr>
+          <tr><td style="padding:2px 10px 2px 0;">Mortgage payoff</td><td style="padding:2px 0;font-weight:700;color:#151922;">(${fmt(d.payoff)})</td></tr>
+          <tr><td style="padding:2px 10px 2px 0;">Broker Compensation</td><td style="padding:2px 0;font-weight:700;color:#151922;">${d.commissionSellerPct}% (${fmt(d.commissionAmt)})</td></tr>
+          <tr><td style="padding:2px 10px 2px 0;">Closing costs</td><td style="padding:2px 0;font-weight:700;color:#151922;">(${fmt(d.sellerClosing)})</td></tr>
+          ${d.sellerCreditBase>0?`<tr><td style="padding:2px 10px 2px 0;">Credit to buyer</td><td style="padding:2px 0;font-weight:700;color:#151922;">(${fmt(d.sellerCreditBase)})</td></tr>`:''}
+          <tr><td style="padding-top:8px; border-top:1px solid #E8E3DD; font-weight:800; color:#151922;">Net proceeds</td><td style="padding-top:8px; border-top:1px solid #E8E3DD; font-weight:800; color:#151922;">${fmt(d.sellerProceeds)}</td></tr>
+        </table>
+      </td></tr>`).join('');
+
+    let insightHtml = '';
+    if(deals.length>1){
+      const a = computeSellerAnalysisFacts(deals);
+      const top = buildSellerCandidateInsights(a)[0];
+      if(top){
+        insightHtml = `<p style="margin:16px 0 0 0; padding:14px 16px; background:#FFF7F7; border-left:3px solid #C40000; border-radius:0 10px 10px 0; font-size:13px; color:#3F4652;"><strong style="color:#151922;">${top.title}:</strong> ${top.message}</p>`;
+      }
+    }
+
+    return `<p style="margin:0 0 12px 0;font-weight:700;color:#151922;font-size:14px;">Net proceeds by offer</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">${dealBlocks}</table>
+      ${insightHtml}`;
+  }
+  const map = {basic:'enBasic', va:'enVA', '21':'en21', '31':'en31', fixed:'enFix', cash:'enCash'};
+  const active = Object.keys(map).filter(k=>{ const el=document.getElementById(map[k]); return el && el.checked; });
+  const results = active.map(computeScenario);
+  const rowsHtml = results.map(r=>{
+    const m = KIND_META[r.kind];
+    return `<tr>
+      <td style="padding:14px 0;border-bottom:1px solid #E8E3DD;">
+        <p style="margin:0 0 8px 0;font-weight:700;color:#151922;font-size:14px;">${m.label}</p>
+        <table cellpadding="0" cellspacing="0" style="font-size:13px; color:#3F4652;">
+          <tr><td style="padding:2px 10px 2px 0;">Cash to close</td><td style="padding:2px 0;font-weight:700;color:#151922;">${fmt(r.fundsDue)}</td></tr>
+          <tr><td style="padding:2px 10px 2px 0;">Starting payment</td><td style="padding:2px 0;font-weight:700;color:#151922;">${fmt(r.startPayment)}/mo</td></tr>
+          <tr><td style="padding:2px 10px 2px 0;">After PMI drops</td><td style="padding:2px 0;font-weight:700;color:#151922;">${fmt(r.finalPayment)}/mo</td></tr>
+        </table>
+      </td>
+    </tr>`;
+  }).join('');
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">${rowsHtml}</table>`;
+}
+
+function setEmailStatus(statusEl, kind, message){
+  statusEl.className = 'email-status show ' + kind;
+  statusEl.innerHTML = kind==='success' ? `<span>&#10003;</span><span>${message}</span>` : message;
+}
+
+function sendEmailCore(nameId, emailId, statusId, btnId, htmlBuilder){
+  const statusEl = document.getElementById(statusId);
+  const name = document.getElementById(nameId).value.trim();
+  const email = document.getElementById(emailId).value.trim();
+  if(!email){ setEmailStatus(statusEl, 'error', 'Enter a client email address first.'); return; }
+  if(EMAILJS_PUBLIC_KEY==='YOUR_PUBLIC_KEY'){
+    setEmailStatus(statusEl, 'error', 'EmailJS isn\u2019t configured yet \u2014 add your public key, service ID, and template ID near the top of the script.');
+    return;
+  }
+  const btn = document.getElementById(btnId);
+  btn.disabled = true; btn.textContent = 'Sending\u2026';
+  setEmailStatus(statusEl, 'pending', 'Sending\u2026');
+  const params = { lead_name: name || 'there', to_email: email, results_html: htmlBuilder() };
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params).then(()=>{
+    setEmailStatus(statusEl, 'success', `Sent to ${email}.`);
+    btn.disabled = false; btn.textContent = 'Email results \u2192';
+  }).catch(err=>{
+    setEmailStatus(statusEl, 'error', 'Something went wrong sending the email \u2014 check the EmailJS configuration.');
+    btn.disabled = false; btn.textContent = 'Email results \u2192';
+    console.error(err);
+  });
+}
+
+function sendResultsEmail(){
+  sendEmailCore('emailToName','emailToAddress','emailStatus','emailSendBtn', buildResultsHtmlEmail);
+}
+
+function buildTTCResultsHtmlEmail(){
+  const kind = ttcSelectedKind || 'basic';
+  const r = computeScenario(kind);
+  const s0 = r.schedule[0];
+  const m = KIND_META[kind];
+  const total = r.fundsDue + APPRAISAL_FEE + INSPECTION_FEE;
+  return `<p style="margin:0 0 12px 0;font-weight:700;color:#151922;font-size:14px;">${m.label} \u2014 Total Transaction Cost</p>
+    <table cellpadding="0" cellspacing="0" style="font-size:13px; color:#3F4652; width:100%;">
+      <tr><td style="padding:4px 10px 4px 0;">Cash to close</td><td style="padding:4px 0;font-weight:700;color:#151922;">${fmt(r.fundsDue)}</td></tr>
+      <tr><td style="padding:4px 10px 4px 0;">Starting payment</td><td style="padding:4px 0;font-weight:700;color:#151922;">${fmt(r.startPayment)}/mo</td></tr>
+      <tr><td style="padding:4px 10px 4px 0;">Principal &amp; interest</td><td style="padding:4px 0;font-weight:700;color:#151922;">${fmt(s0.payment)}</td></tr>
+      <tr><td style="padding:4px 10px 4px 0;">Taxes</td><td style="padding:4px 0;font-weight:700;color:#151922;">${fmt(s0.taxes)}</td></tr>
+      <tr><td style="padding:4px 10px 4px 0;">Insurance</td><td style="padding:4px 0;font-weight:700;color:#151922;">${fmt(s0.ins)}</td></tr>
+      ${s0.pmi>0?`<tr><td style="padding:4px 10px 4px 0;">PMI</td><td style="padding:4px 0;font-weight:700;color:#151922;">${fmt(s0.pmi)}</td></tr>`:''}
+      <tr><td style="padding:10px 10px 4px 0; border-top:1px solid #E8E3DD; padding-top:10px;">Appraisal fee</td><td style="padding:10px 0 4px 0; border-top:1px solid #E8E3DD; font-weight:700;color:#151922;">${fmt(APPRAISAL_FEE)}</td></tr>
+      <tr><td style="padding:4px 10px 4px 0;">Inspection (home, termite, radon)</td><td style="padding:4px 0;font-weight:700;color:#151922;">${fmt(INSPECTION_FEE)}</td></tr>
+      <tr><td style="padding:10px 10px 4px 0; border-top:1px solid #E8E3DD; font-weight:800; color:#151922; padding-top:10px;">Total transaction cost</td><td style="padding:10px 0 4px 0; border-top:1px solid #E8E3DD; font-weight:800; color:#151922;">${fmt(total)}</td></tr>
+    </table>`;
+}
+
+function sendTTCResultsEmail(){
+  sendEmailCore('emailToNameTtc','emailToAddressTtc','emailStatusTtc','emailSendBtnTtc', buildTTCResultsHtmlEmail);
+}
+
+function copySummary(){
+  const results = [
+    document.getElementById('enBasic').checked?'basic':null,
+    document.getElementById('enVA').checked?'va':null,
+    document.getElementById('en21').checked?'21':null,
+    document.getElementById('en31').checked?'31':null,
+    document.getElementById('enFix').checked?'fixed':null,
+    document.getElementById('enCash').checked?'cash':null
+  ].filter(Boolean).map(computeScenario);
+  let text = 'NegotiatorIQ \u2014 financial impact summary\n\n';
+  results.forEach(r=>{
+    const m = KIND_META[r.kind];
+    text += `${m.label}\n  Cash to close: ${fmt(r.fundsDue)}\n  Starting payment: ${fmt(r.startPayment)}/mo\n  Payment after PMI drops: ${fmt(r.finalPayment)}/mo\n  Seller net proceeds: ${fmt(r.sellerProceeds)}\n\n`;
+  });
+  navigator.clipboard.writeText(text).then(()=>{ alert('Summary copied \u2014 paste it into an email or text to share.'); });
+}
+/* ===== Amortization calculator (standalone, not tied to the rest of NegotiatorIQ) ===== */
+(function(){
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const sel = document.getElementById('amortStartMonth');
+  if(sel){
+    sel.innerHTML = MONTHS.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+  }
+
+  function amortPmt(ratePct, principal, months){
+    const r = ratePct/100/12;
+    if(months<=0) return 0;
+    if(r===0) return principal/months;
+    return principal*r/(1-Math.pow(1+r,-months));
+  }
+  function amortBalanceAfter(ratePct, principal, termMonths, paymentsMade){
+    const r = ratePct/100/12;
+    const n = Math.max(paymentsMade,0);
+    if(r===0) return Math.max(principal - (principal/termMonths)*n, 0);
+    const p = amortPmt(ratePct, principal, termMonths);
+    const bal = principal*Math.pow(1+r,n) - p*((Math.pow(1+r,n)-1)/r);
+    return Math.max(bal, 0);
+  }
+
+  window.calcAmortization = function(){
+    const principal = parseFloat(document.getElementById('amortPrincipal').value) || 0;
+    const rate = parseFloat(document.getElementById('amortRate').value) || 0;
+    const termYears = parseFloat(document.getElementById('amortTerm').value) || 30;
+    const startMonth = parseInt(document.getElementById('amortStartMonth').value, 10) || 0;
+    const startYear = parseInt(document.getElementById('amortStartYear').value, 10) || new Date().getFullYear();
+    const termMonths = termYears*12;
+
+    const today = new Date();
+    const elapsed = (today.getFullYear()-startYear)*12 + (today.getMonth()-startMonth);
+
+    const rows = [];
+    for(let i=0;i<4;i++){
+      const paymentsMade = Math.max(elapsed+i, 0);
+      const balance = amortBalanceAfter(rate, principal, termMonths, paymentsMade);
+      const d = new Date(today.getFullYear(), today.getMonth()+i, 1);
+      rows.push({
+        label: i===0 ? 'This month' : MONTHS[d.getMonth()]+' '+d.getFullYear()+' (+'+i+' mo)',
+        date: MONTHS[d.getMonth()]+' '+d.getFullYear(),
+        balance,
+        isCurrent: i===0
+      });
+    }
+
+    const out = document.getElementById('amortResults');
+    out.innerHTML = rows.map(r=>`
+      <div class="amort-row ${r.isCurrent?'current':''}" onclick="copyAmortBalance(${r.balance.toFixed(2)})">
+        <div>
+          <div class="lbl">${r.label}</div>
+          <div class="hint">${r.date} &middot; click to copy</div>
+        </div>
+        <div class="bal">$${Math.round(r.balance).toLocaleString()}</div>
+      </div>
+    `).join('');
+  };
+
+  window.toggleContactMenu = function(){
+    const menu = document.querySelector('.header-contact-menu');
+    const dropdown = menu.querySelector('[data-contact-options]');
+    const toggle = menu.querySelector('[data-contact-toggle]');
+    const isOpen = dropdown.classList.contains('is-open');
+    dropdown.classList.toggle('is-open', !isOpen);
+    toggle.setAttribute('aria-expanded', String(!isOpen));
+  };
+  document.addEventListener('click', function(e){
+    const menu = document.querySelector('.header-contact-menu');
+    if(!menu) return;
+    if(!menu.contains(e.target)){
+      menu.querySelector('[data-contact-options]').classList.remove('is-open');
+      menu.querySelector('[data-contact-toggle]').setAttribute('aria-expanded','false');
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      const dropdown = document.querySelector('.header-contact-menu [data-contact-options]');
+      if(dropdown) dropdown.classList.remove('is-open');
+    }
+  });
+  window.copyEmailFallback = function(event){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText('khart@fathomrealty.com').catch(()=>{});
+    }
+    // let the mailto: still attempt to fire; this just guarantees the address
+    // is on the clipboard even if no mail client is configured to open.
+  };
+
+  window.openAmortModal = function(){
+    const overlay = document.getElementById('amortOverlay');
+    overlay.style.display = 'flex';
+    calcAmortization();
+  };
+  window.closeAmortModal = function(){
+    document.getElementById('amortOverlay').style.display = 'none';
+  };
+  window.copyAmortBalance = function(balance){
+    const rounded = Math.round(balance);
+    const finish = ()=>closeAmortModal();
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(String(rounded)).then(finish).catch(finish);
+    } else {
+      finish();
+    }
+  };
+
+  // set a sensible default start month/year (defaults to today's month, 2 years back) once on load
+  const y = document.getElementById('amortStartYear');
+  if(y) y.value = new Date().getFullYear()-2;
+  if(sel) sel.value = new Date().getMonth();
+})();
+</script>
+</body>
+</html>
