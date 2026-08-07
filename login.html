@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NegotiatorIQ — Sign In</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --red: #C40000;
+    --ink: #130F0F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .brand-name { font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+  .brand-sub { font-size: 12px; color: #888; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 28px; }
+  h1 { font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 20px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px; }
+  input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d8dade;
+    border-radius: 6px;
+    font-size: 15px;
+    margin-bottom: 18px;
+  }
+  input:focus { outline: none; border-color: var(--red); }
+  button {
+    width: 100%;
+    padding: 12px;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .message {
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    display: none;
+  }
+  .message.error { background: #fdecea; color: #b3261e; display: block; }
+  .footer-note { text-align: center; font-size: 12px; color: #aaa; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="brand-name">NegotiatorIQ</div>
+  <div class="brand-sub">Powered by SmartIQ Realty</div>
+
+  <h1>Sign In</h1>
+
+  <div id="error-box" class="message error"></div>
+
+  <form id="login-form" novalidate>
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="username" required>
+
+    <label for="password">Password</label>
+    <input type="password" id="password" autocomplete="current-password" required>
+
+    <button type="submit" id="submit-btn">Sign In</button>
+  </form>
+
+  <p class="footer-note">Access is limited to active engagements only.</p>
+</div>
+
+<script type="module">
+  import { supabaseClient } from './js/supabaseClient.js';
+
+  const form = document.getElementById('login-form');
+  const errorBox = document.getElementById('error-box');
+  const submitBtn = document.getElementById('submit-btn');
+
+  function showError(text) {
+    errorBox.textContent = text;
+    errorBox.classList.add('error');
+  }
+
+  // If a valid, still-authorized session already exists, skip straight in
+  const { data: { session: existingSession } } = await supabaseClient.auth.getSession();
+  if (existingSession) {
+    const { data: alreadyAuthorized } = await supabaseClient.rpc('is_authorized');
+    if (alreadyAuthorized) {
+      window.location.href = './index.html';
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.classList.remove('error');
+    errorBox.textContent = '';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in...';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const { error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (signInError) {
+      showError(signInError.message === 'Invalid login credentials'
+        ? 'Incorrect email or password.'
+        : signInError.message);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In';
+      return;
+    }
+
+    // Login succeeded -- but a valid Supabase session doesn't mean
+    // access is currently authorized. Check the actual engagement
+    // status (active + not expired) before letting them through.
+    const { data: authorized, error: authError } = await supabaseClient.rpc('is_authorized');
+
+    if (authError || !authorized) {
+      showError('This account does not currently have active access. Contact Kelvin Hart if you believe this is an error.');
+      await supabaseClient.auth.signOut();
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In';
+      return;
+    }
+
+    window.location.href = './index.html';
+  });
+</script>
+
+</body>
+</html>

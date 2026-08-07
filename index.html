@@ -4,6 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NegotiatorIQ | Offer &amp; Price Impact Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module">
+  // ---- Auth guard ----
+  // Runs before the rest of the page's own script (line ~683).
+  // Not just "is there a session" -- also confirms the account is
+  // currently authorized (active + not expired), since a client's
+  // Supabase session can outlive their actual engagement window.
+  import { supabaseClient } from './js/supabaseClient.js';
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    window.location.href = './login.html';
+  } else {
+    const { data: authorized } = await supabaseClient.rpc('is_authorized');
+    if (!authorized) {
+      await supabaseClient.auth.signOut();
+      window.location.href = './login.html';
+    }
+  }
+</script>
 <link rel="apple-touch-icon" href="/negotiatoriq-apple-touch-icon-180.png">
 <link rel="icon" type="image/png" href="/favicon-32x32.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
